@@ -1,11 +1,8 @@
-import evaluate # Huggingface evaluate
-import preprocess
+import evaluate # Huggingface evaluatetokenizer
 import numpy as np
 
 metric = evaluate.load("sacrebleu")
 
-# initialize tokenizer defined in preprocess.py
-tokenizer = preprocess.tokenizer
 
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
@@ -14,7 +11,7 @@ def postprocess_text(preds, labels):
     return preds, labels
 
 
-def compute_metrics(eval_preds):
+def compute_metrics(tokenizer, eval_preds):
     preds, labels = eval_preds
     if isinstance(preds, tuple):
         preds = preds
