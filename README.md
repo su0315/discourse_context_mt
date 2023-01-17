@@ -1,6 +1,6 @@
 # discourse_context_mt
 
-Updated at Jan 17th
+Updated in Jan 17th
 
 To run the model with English-Japanese, BSD dataset and the context size 1,
 
