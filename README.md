@@ -10,3 +10,7 @@ python main.py -s en -t ja -p '../discourse_context_mt/data/BSD-master/' -c 1
 ```
 
 The "-p" might be adapted depending on where you store the BSD dataset
+
+
+The result will be updated here
+[a link](https://docs.google.com/spreadsheets/d/1yiK7cjZ-hxiPAKQZLFRc4C4P0cG5YvMZy8xyK5YzEwQ/edit?usp=sharing)
