@@ -1,32 +1,29 @@
 import argparse
 import preprocess, eval_bleu
-from transformers import Trainer, TrainingArguments, Seq2SeqTrainingArguments, Seq2SeqTrainer, EarlyStoppingCallback
+from transformers import Trainer, TrainingArguments, Seq2SeqTrainingArguments, Seq2SeqTrainer, EarlyStoppingCallback, MBart50Tokenizer, MBartConfig, MBartForConditionalGeneration, DataCollatorForSeq2Seq
 import evaluate
 import numpy as np
-
-from datasets import load_dataset, concatenate_datasets # Huggingface datasets
-import transformers
-from transformers import MBart50Tokenizer, MBartConfig, MBartForConditionalGeneration, DataCollatorForSeq2Seq
-
+from logger import CustomLoggerCallback
+from transformers import integrations
+from datasets import load_dataset, concatenate_datasets 
 from functools import partial
 
 
 def main():
     parser = argparse.ArgumentParser()
-    #parser.add_argument("--source-file", required=True, help="file to be translated")
     #parser.add_argument("--docids-file", required=True, help="file with document ids")
     #parser.add_argument("--predictions-file", required=True, help="file to save the predictions")
-    #parser.add_argument("--reference-file", default=None, help="reference file, used if with --gold-target-context")
     parser.add_argument("-s", "--source_lang", required=True, help="souce language")
     parser.add_argument("-t", "--target_lang", required=True)
     parser.add_argument("-p", "--path", required=True, metavar="FILE", help="path to model file for bsd is '/home/sumire/discourse_context_mt/data/BSD-master/'")
-    #parser.add_argument("-c", "--context_size", default=0, help="the number of the context sentence for each input")
+    parser.add_argument("-cp", "--context_place", default="src", help="context place whether target or source")
     parser.add_argument("-c", "--context_size", type=int, default=0, help="the number of the context sentence for each input")
     args = parser.parse_args()
 
     source_lang = args.source_lang
     target_lang = args.target_lang
     file_path = args.path
+    context_place = args.context_place
     context_size = args.context_size  
     
     
@@ -40,19 +37,13 @@ def main():
     configuration = MBartConfig()
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{source_lang}_XX", tgt_lang=f"{target_lang}_XX")
     model = MBartForConditionalGeneration.from_pretrained(model_checkpoint)
-    
-    
-    
-    # Check if preprocessing correctly
-    #inputs=preprocess.preprocess_function(dataset["validation"], context_size, tokenizer)
-    #print (inputs)
+    #tokenizer.add_special_tokens({'eos_token':'</s>'}) 
+    #tokenizer.add_special_tokens({'sep_token':'</s>'})
+        
+    # Check if preprocessing done correctly
+    model_inputs=preprocess.preprocess_function(context_size, tokenizer, dataset["validation"])
     #print (model_inputs["input_ids"][1])
-    #print (tokenizer.decode(model_inputs['input_ids'][1]))
-
-    #print (tokenizer.decode(model_inputs['labels'][1]))
-    #print (tokenizer.decode(model_inputs['input_ids'][1]))
-
-
+    
     # Apply the preprocess function for the entire dataset 
     tokenized_datasets = dataset.map(
     partial(preprocess.preprocess_function, context_size, tokenizer),
@@ -60,7 +51,7 @@ def main():
     remove_columns=dataset["train"].column_names,
     )
     
-
+    # Check the decoded input
     #print (tokenizer.decode(tokenized_datasets["train"][:5]['input_ids'][3]))
 
     # Create a batch using DataCollator and pad dinamically
@@ -68,7 +59,7 @@ def main():
     
     # New Trainer
     training_args = Seq2SeqTrainingArguments(
-    output_dir='./results/inputs_context_1',
+    output_dir='./results/bsd_en-ja/4-1', # Modify here
     evaluation_strategy="steps",
     learning_rate=2e-5,        
     logging_dir='./logs',                       
@@ -77,7 +68,7 @@ def main():
     warmup_steps=500,                
     weight_decay=0.01,
     save_total_limit=3,
-    report_to="all",
+    report_to="all", # occasionally "tensorboard"
     fp16=True,
     do_eval=True,
     metric_for_best_model = 'bleu', # eval_bleu.metric,
@@ -93,7 +84,6 @@ def main():
     #half_precision_backend="apex",
     eval_steps=1000,
     save_steps=1000,
-    #report_to=“tensorboard” # Add this
     )
 
     trainer = Seq2SeqTrainer(
@@ -105,6 +95,7 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=partial(eval_bleu.compute_metrics, tokenizer),
         callbacks = [EarlyStoppingCallback(early_stopping_patience=10)] # Put tensorboard logger: [EarlyStoppingCallback(early_stopping_patience=10) , CustomLoggerCallback]
+        #callbacks = integrations.TensorBoardCallback # for tensorboard call backs, don't know how to run this
         )
     
     trainer.train()
