@@ -16,41 +16,48 @@ def main():
     parser.add_argument("-s", "--source_lang", required=True, help="souce language")
     parser.add_argument("-t", "--target_lang", required=True)
     parser.add_argument("-p", "--path", required=True, metavar="FILE", help="path to model file for bsd is '/home/sumire/discourse_context_mt/data/BSD-master/'")
-    parser.add_argument("-cp", "--context_place", default="src", help="context place whether target or source")
-    parser.add_argument("-c", "--context_size", type=int, default=0, help="the number of the context sentence for each input")
+    parser.add_argument("-sc", "--src_context_size",type=int, default="src", help="the number of the target context sentence for each input")
+    parser.add_argument("-tc", "--tgt_context_size", type=int, default=0, help="the number of the source context sentence for each input")
+    #parser.add_argument("-d", "--cw_dropout_rate", type=float, choices=np.arange(0.0, 1.0), default=0, help="the coword dropout rate")
     args = parser.parse_args()
 
     source_lang = args.source_lang
     target_lang = args.target_lang
     file_path = args.path
-    context_place = args.context_place
-    context_size = args.context_size  
-    
-    
+    src_context_size = args.src_context_size  
+    tgt_context_size = args.tgt_context_size
+    #cw_dropout_rate = args.cw_dropout_rate
+
     # Load the dataset
     file_path = file_path
     data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
-    
+
     # Tokenize using "facebook/mbart-large-50-many-to-many-mmt"
     model_checkpoint = "facebook/mbart-large-50-many-to-many-mmt"
     configuration = MBartConfig()
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{source_lang}_XX", tgt_lang=f"{target_lang}_XX")
     model = MBartForConditionalGeneration.from_pretrained(model_checkpoint)
-    #tokenizer.add_special_tokens({'eos_token':'</s>'}) 
-    #tokenizer.add_special_tokens({'sep_token':'</s>'})
-        
-    # Check if preprocessing done correctly
-    model_inputs=preprocess.preprocess_function(context_size, tokenizer, dataset["validation"])
-    #print (model_inputs["input_ids"][1])
     
+    # Add special token to separate context and current sentence
+    tokenizer.add_special_tokens({"sep_token":"</t>"})
+    model.resize_token_embeddings(len(tokenizer))
+    print("sep_token",tokenizer.get_added_vocab(), tokenizer.convert_tokens_to_ids("</t>"),tokenizer.decode(tokenizer.sep_token_id))
+
     # Apply the preprocess function for the entire dataset 
     tokenized_datasets = dataset.map(
-    partial(preprocess.preprocess_function, context_size, tokenizer),
+    partial(preprocess.preprocess_function, src_context_size, tgt_context_size, tokenizer),
     batched=True,
-    remove_columns=dataset["train"].column_names,
+    remove_columns=dataset["train"].column_names, # train
     )
-    
+
+    """
+    # Coword Dropout
+    if cw_dropout_rate > 0:
+        coword_dataset = tokenized_dataset[train].map(partial(preprocess.coword_dropout(), cw_drop_rate)) 
+        tokenized_dataset["train"] = coword_dataset
+    """
+
     # Check the decoded input
     #print (tokenizer.decode(tokenized_datasets["train"][:5]['input_ids'][3]))
 
@@ -59,7 +66,7 @@ def main():
     
     # New Trainer
     training_args = Seq2SeqTrainingArguments(
-    output_dir='./results/bsd_en-ja/4-1', # Modify here
+    output_dir='./results/bsd_en-ja/3-3_comet(the other is baseline)', # Modify here
     evaluation_strategy="steps",
     learning_rate=2e-5,        
     logging_dir='./logs',                       
@@ -71,19 +78,20 @@ def main():
     report_to="all", # occasionally "tensorboard"
     fp16=True,
     do_eval=True,
-    metric_for_best_model = 'bleu', # eval_bleu.metric,
+    metric_for_best_model = 'comet', # eval_bleu.metric,
     load_best_model_at_end = True,
     num_train_epochs = 10,
     greater_is_better = True,
     predict_with_generate = True,
-    do_train = True,
+    do_train = True, # True
     logging_strategy = 'steps',
     save_strategy = 'steps',
     logging_steps=1000,
     #gradient_accumulation_steps=1000,
     #half_precision_backend="apex",
     eval_steps=1000,
-    save_steps=1000,
+    save_steps=1000, 
+    include_inputs_for_metrics = True # for comet
     )
 
     trainer = Seq2SeqTrainer(
@@ -94,10 +102,12 @@ def main():
         data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=partial(eval_bleu.compute_metrics, tokenizer),
-        callbacks = [EarlyStoppingCallback(early_stopping_patience=10)] # Put tensorboard logger: [EarlyStoppingCallback(early_stopping_patience=10) , CustomLoggerCallback]
+        callbacks = [EarlyStoppingCallback(early_stopping_patience=10)], # Put tensorboard logger: [EarlyStoppingCallback(early_stopping_patience=10) , CustomLoggerCallback]
         #callbacks = integrations.TensorBoardCallback # for tensorboard call backs, don't know how to run this
+
         )
     
+    #trainer.evaluate() # When I want to evaluate first 
     trainer.train()
     
     
