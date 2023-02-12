@@ -1,6 +1,7 @@
 import evaluate # Huggingface evaluatetokenizer
 import numpy as np
 import preprocess
+import json
 
 metric1 = evaluate.load("sacrebleu")
 metric2 =  evaluate.load("comet") # Added comet
@@ -27,6 +28,8 @@ def compute_metrics(tokenizer, eval_preds):
     print (preds[:10][:5])
     decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
     print ("decoded_preds: ", decoded_preds[:5])
+    #with open('./results/bsd_en-ja/bleu_ja_pred/inference.json', 'w', encoding='utf8') as json_file:
+        #json.dump(decoded_preds, json_file, ensure_ascii=False,)
     
 
     #Labels
@@ -52,7 +55,7 @@ def compute_metrics(tokenizer, eval_preds):
     
 
     # bleu
-    bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels)
+    bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels, tokenize='ja-mecab')
     result = {"bleu": bleu["score"]}
 
     # comet
