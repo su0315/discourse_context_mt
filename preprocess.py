@@ -78,11 +78,10 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
             new_inputs, text_target=new_targets, max_length=max_length, truncation=True
         )
         
-    if cw_dropout_rate>0 and data == dataset["train"]:
+    if cw_dropout_rate>0:
 
         #new_input_ids = []
         for i,inst in enumerate(model_inputs['input_ids']):
-            print(inst)
             sep_indices = [i for i, x in enumerate(inst) if x == tokenizer.convert_tokens_to_ids("</t>")]
             eos_indices = [i for i, x in enumerate(inst) if x == tokenizer.eos_token_id] #should be only 1
             # print(sep_indices)
@@ -96,10 +95,8 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10], skip_special_tokens=False))
-        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][:10], skip_special_tokens=False))
-
-        print (model_inputs.keys(), model_inputs[:100])
+        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10]))
+        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][:10]))
 
     return model_inputs
 
@@ -124,10 +121,6 @@ if __name__ == "__main__":
     print("sep_token",tokenizer.get_added_vocab(), tokenizer.convert_tokens_to_ids("</t>"),tokenizer.decode(tokenizer.sep_token_id))
     cw_dropout_rate=0.2
     preprocess_function(2, 1, cw_dropout_rate, tokenizer, dataset['train'])
-
-    #print (tokenizer.bos_token)
-    #print (tokenizer.bos_token)
-    #print (tokenizer.encode(tokenizer.bos_token))
     print (tokenizer.decode(250054))
 
     
