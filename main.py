@@ -95,6 +95,8 @@ def main():
         remove_columns=dataset["train"].column_names, # train
         )
         print ("CoWord done!")
+    else:
+        print ("No dropout")
 
     # Check if the decoded input has CoWord dropout
     print ("masked_decoded_inputs:", tokenizer.batch_decode(tokenized_datasets["train"]["input_ids"][:5]))
@@ -116,6 +118,7 @@ def main():
         #callbacks = integrations.TensorBoardCallback # for tensorboard call backs, don't know how to run this
 
         )
+    trainer.train()
 
     #compute the metrics for the translations you got 
     
