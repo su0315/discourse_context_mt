@@ -18,7 +18,7 @@ def main():
     parser.add_argument("-p", "--path", required=True, metavar="FILE", help="path to model file for bsd is '/home/sumire/discourse_context_mt/data/BSD-master/'")
     parser.add_argument("-sc", "--src_context_size",type=int, default="src", help="the number of the target context sentence for each input")
     parser.add_argument("-tc", "--tgt_context_size", type=int, default=0, help="the number of the source context sentence for each input")
-    #parser.add_argument("-d", "--cw_dropout_rate", type=float, choices=np.arange(0.0, 1.0), default=0, help="the coword dropout rate")
+    parser.add_argument("-d", "--cw_dropout_rate", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
     args = parser.parse_args()
 
     source_lang = args.source_lang
@@ -26,7 +26,7 @@ def main():
     file_path = args.path
     src_context_size = args.src_context_size  
     tgt_context_size = args.tgt_context_size
-    #cw_dropout_rate = args.cw_dropout_rate
+    cw_dropout_rate = args.cw_dropout_rate
 
     # Load the dataset
     file_path = file_path
@@ -46,7 +46,7 @@ def main():
 
     # Apply the preprocess function for the entire dataset 
     tokenized_datasets = dataset.map(
-    partial(preprocess.preprocess_function, src_context_size, tgt_context_size, tokenizer),
+    partial(preprocess.preprocess_function, src_context_size, tgt_context_size, cw_dropout_rate, tokenizer),
     batched=True,
     remove_columns=dataset["train"].column_names, # train
     )
@@ -66,7 +66,7 @@ def main():
     
     # New Trainer
     training_args = Seq2SeqTrainingArguments(
-    output_dir='./results/bsd_en-ja/3-3_comet(the other is baseline)', # Modify here
+    output_dir='./results/bsd_en-ja/2-1_dropout', # Modify here
     evaluation_strategy="steps",
     learning_rate=2e-5,        
     logging_dir='./logs',                       
@@ -78,6 +78,7 @@ def main():
     report_to="all", # occasionally "tensorboard"
     fp16=True,
     do_eval=True,
+    #do_predict = True,
     metric_for_best_model = 'comet', # eval_bleu.metric,
     load_best_model_at_end = True,
     num_train_epochs = 10,
@@ -98,7 +99,7 @@ def main():
         model=model,                         
         args=training_args,                  
         train_dataset=tokenized_datasets["train"],        
-        eval_dataset=tokenized_datasets["validation"],            
+        eval_dataset=tokenized_datasets["validation"],          
         data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=partial(eval_bleu.compute_metrics, tokenizer),
@@ -107,7 +108,6 @@ def main():
 
         )
     
-    #trainer.evaluate() # When I want to evaluate first 
     trainer.train()
     
     
