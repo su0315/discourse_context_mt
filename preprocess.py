@@ -15,24 +15,21 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
     new_targets = []
 
     for doc in data["conversation"]:
-        print ('sent["speaker"]', [sent["en_sentence"] for sent in doc])
         doc_input = [sent['en_sentence'] for sent in doc] # Iterate over every documents #list[doc[sent]] # for doc in docs. 
         doc_target = [sent['ja_sentence'] for sent in doc]
         inputs.append(doc_input)
         targets.append(doc_target)
 
-        if src_context_size == 0:
-            for sent in doc_input:    
-                new_inputs.append(sent)
+        new_doc_input = []
+        for idx, ip in enumerate (doc_input):
+            # src_context_size = np.random(0, src_context_size, 1)
+            if src_context_size == 0:
+                new_doc_input.append(ip)
     
         # Context_aware inputs, "new_inputs"
-        else:    
-            # Concatenate contexts given any context_size
-            new_doc_input = []
+            else:    
             # Check each inputs 
-            for idx, ip in enumerate (doc_input):
-                context_list = []
-                
+                context_list = []  
                 # Check each context index given the context size and current input index
                 for context_window in range(src_context_size, 0, -1):
                     context_idx = idx - context_window
@@ -53,21 +50,20 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                     #print ("new_input", new_input)
                     new_doc_input.append(new_input)
                     #print ("new_doc_input", new_doc_input) 
-            new_inputs.append(new_doc_input)
+        new_inputs.append(new_doc_input)
         #print ("-------")
         #print ("new_inputs_per doc-level:", new_inputs)
-        print ("-------")
-    for input
-    print ("new_inputs_per entirely:", new_inputs)
-    """
-        # Concatenate contexts given any context_size
-        if tgt_context_size == 0:
-            new_targets = targets
+        #print ("-------")
+        #print("new_inputs1", new_inputs)
 
-        else:
-            new_targets = []
-            # Check each inputs 
-            for idx, tgt in enumerate (targets):
+        # Concatenate contexts given any context_size
+        new_doc_target = []
+        for idx, tgt in enumerate (doc_target):
+            # tgt_context_size = np.random(0, tgt_context_size, 1)
+            if tgt_context_size == 0:
+                new_doc_target.append(tgt)
+
+            else:
                 tgt_context_list = []
                 
                 # Check each context index given the context size and current input index
@@ -77,25 +73,31 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                     # If context idx is not the left side of the beggining of the inputs
                     if context_idx >= 0:
                         #Store the context in a list
-                        tgt_context_list.append(targets[context_idx])
+                        tgt_context_list.append(doc_target[context_idx])
                     
-                if len(context_list) ==0:
-                    new_targets.append(tgt)
+                if len(tgt_context_list) ==0:
+                    new_doc_target.append(tgt)
                     
                 else:
                     concat_contexts = "</t>".join(tgt_context_list)
                     #print (concat_contexts)
+    
 
                     new_target = "</t>".join([concat_contexts,tgt])
-                    #print (new_input)
-                    new_targets.append(new_target)
-    
-    model_inputs = tokenizer(
-            new_inputs, text_target=new_targets, max_length=max_length, truncation=True
-        )
-        
-    if cw_dropout_rate>0:
+                    new_doc_target.append(new_target)
+                    
+        new_targets.append(new_doc_target)
 
+    new_inputs = [sent for doc in new_inputs for sent in doc]  
+    print ("new_inputs[30:40]", new_inputs[30:40])  
+    new_targets = [sent for doc in new_targets for sent in doc] 
+    print ("new_targets[30:40]", new_targets[30:40] )    
+
+    model_inputs = tokenizer(
+            new_inputs, text_target=new_targets, max_length=max_length, truncation=False
+        )
+
+    if cw_dropout_rate>0:
         #new_input_ids = []
         for i,inst in enumerate(model_inputs['input_ids']):
             sep_indices = [i for i, x in enumerate(inst) if x == tokenizer.convert_tokens_to_ids("</t>")]
@@ -111,17 +113,17 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10]))
-        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][:10]))
+        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][30:40]))
+        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][30:40]))
 
     return model_inputs
-    """
+
 
 # To make sure those below runs only when "python preprocess.py"
 if __name__ == "__main__":
     # Load the dataset
     file_path = '/home/sumire/discourse_context_mt/data/BSD-master/'
-    data_files = {"train": f"{file_path}short_train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}short_test.json"}
+    data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
     
     # Tokenize using "facebook/mbart-large-50-many-to-many-mmt"
@@ -135,6 +137,6 @@ if __name__ == "__main__":
     tokenizer.add_special_tokens({"sep_token":"</t>"})
     model.resize_token_embeddings(len(tokenizer))
     cw_dropout_rate=0.2
-    preprocess_function(2, 1, cw_dropout_rate, tokenizer, dataset['train'])
+    preprocess_function(4, 4, cw_dropout_rate, tokenizer, dataset['train'])
     
     
