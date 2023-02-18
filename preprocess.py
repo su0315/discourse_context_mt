@@ -4,15 +4,17 @@ from transformers import MBart50TokenizerFast, MBart50Tokenizer, MBartConfig, MB
 import numpy as np
 from functools import partial
 import torch
+import random
 
 max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
 # 520 # 128
 
-def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tokenizer, data): # data should be splitted into train / dev / test internally
+def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tgt_sep, tokenizer, data): # data should be splitted into train / dev / test internally
     inputs = []
     targets = []
     new_inputs = []
     new_targets = []
+    new_tgt_contexts = []
 
     for doc in data["conversation"]:
         doc_input = [sent['en_sentence'] for sent in doc] # Iterate over every documents #list[doc[sent]] # for doc in docs. 
@@ -22,7 +24,7 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
 
         new_doc_input = []
         for idx, ip in enumerate (doc_input):
-            # src_context_size = np.random(0, src_context_size, 1)
+            src_context_size = random.randint(0, src_context_size) ####################Deal with when the context size is zero ###############
             if src_context_size == 0:
                 new_doc_input.append(ip)
     
@@ -58,11 +60,13 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
 
         # Concatenate contexts given any context_size
         new_doc_target = []
+        # Separate context and current sentences per doc
+        new_doc_context = [] #
         for idx, tgt in enumerate (doc_target):
-            # tgt_context_size = np.random(0, tgt_context_size, 1)
+            tgt_context_size = random.randint(0, tgt_context_size) ############## Deal with when the context size is zero ############3
             if tgt_context_size == 0:
-                new_doc_target.append(tgt)
-
+                new_doc_target.append(tgt) 
+                new_doc_context.append("</t>") # to make context_ids the same shape with input_ids 
             else:
                 tgt_context_list = []
                 
@@ -76,26 +80,49 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                         tgt_context_list.append(doc_target[context_idx])
                     
                 if len(tgt_context_list) ==0:
+                    new_doc_context.append("</t>")
                     new_doc_target.append(tgt)
                     
                 else:
                     concat_contexts = "</t>".join(tgt_context_list)
                     #print (concat_contexts)
-    
-
-                    new_target = "</t>".join([concat_contexts,tgt])
-                    new_doc_target.append(new_target)
-                    
+                    if tgt_sep : #
+                        #print ("------------")
+                        new_doc_context.append(concat_contexts)
+                        print ("new_doc_context1", new_doc_context)
+                        new_doc_target.append(tgt)
+                        #print ("new_doc_target", new_doc_target)
+                    else:
+                        new_target = "</t>".join([concat_contexts,tgt])
+                        new_doc_target.append(new_target) #
+        
+        new_tgt_contexts.append(new_doc_context) #     
         new_targets.append(new_doc_target)
+        #print ("new_targets1", new_targets[:10])
 
+    new_tgt_contexts = [sent for doc in new_tgt_contexts for sent in doc]
+    print ("new_tgt_contexts[:10]", new_tgt_contexts[:10])
+    context_out  = tokenizer(new_tgt_contexts, max_length=max_length,  truncation=False, padding=True) # Modify False
+    context_ids = context_out['input_ids'] #
+    context_attn = context_out['attention_mask'] #
+    print ("context_ids", context_ids)
     new_inputs = [sent for doc in new_inputs for sent in doc]  
     print ("new_inputs[30:40]", new_inputs[30:40])  
     new_targets = [sent for doc in new_targets for sent in doc] 
     print ("new_targets[30:40]", new_targets[30:40] )    
 
     model_inputs = tokenizer(
-            new_inputs, text_target=new_targets, max_length=max_length, truncation=False
+            new_inputs, text_target=new_targets, max_length=max_length, truncation=False, padding=True
         )
+
+    if tgt_context_size>0:
+        ilen = len(context_ids[0])
+        for ic, con in enumerate(context_ids): ####How does this work?"#####
+            assert ilen == len(con), "line is  {0}".format(con)
+        
+        model_inputs['context_ids']=context_ids
+        model_inputs['context_attention_mask']=context_attn
+        print ('model_inputs["context_ids"]', model_inputs["context_ids"])
 
     if cw_dropout_rate>0:
         #new_input_ids = []
@@ -113,9 +140,10 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][30:40]))
-        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][30:40]))
-
+        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][30:40], skip_special_tokens=True))
+        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][30:40], skip_special_tokens=True))
+        #print ("\nDecoded tokinized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:5], skip_special_tokens=True))
+        #print ("\nDecoded tokinized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][30:40],skip_special_tokens=True))
     return model_inputs
 
 
@@ -123,7 +151,7 @@ def preprocess_function(src_context_size, tgt_context_size, cw_dropout_rate, tok
 if __name__ == "__main__":
     # Load the dataset
     file_path = '/home/sumire/discourse_context_mt/data/BSD-master/'
-    data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}
+    data_files = {"train": f"{file_path}short_train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}short_test.json"}
     dataset = load_dataset("json", data_files=data_files)
     
     # Tokenize using "facebook/mbart-large-50-many-to-many-mmt"
@@ -137,6 +165,7 @@ if __name__ == "__main__":
     tokenizer.add_special_tokens({"sep_token":"</t>"})
     model.resize_token_embeddings(len(tokenizer))
     cw_dropout_rate=0.2
-    preprocess_function(4, 4, cw_dropout_rate, tokenizer, dataset['train'])
+    tgt_sep = True
+    preprocess_function(4, 4, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
     
     
