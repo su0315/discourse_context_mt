@@ -14,7 +14,7 @@ def postprocess_text(preds, labels, input_ids):
     return preds, labels, input_ids
 
 
-def compute_metrics(tokenizer, eval_preds):
+def compute_metrics(output_dir,tgt_lang, tokenizer, eval_preds):
     preds, labels, input_ids = eval_preds # Check the location of input_ids is appropriate
     
     # Preds
@@ -31,6 +31,10 @@ def compute_metrics(tokenizer, eval_preds):
     #with open('./results/bsd_en-ja/bleu_ja_pred/inference.json', 'w', encoding='utf8') as json_file:
         #json.dump(decoded_preds, json_file, ensure_ascii=False,)
     
+    # Store inference
+    with open(output_dir+'/translations.txt','w', encoding='utf8') as wf:
+         for translation in decoded_preds:
+            wf.write(translation.strip()+'\n') 
 
     #Labels
     labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
@@ -53,9 +57,12 @@ def compute_metrics(tokenizer, eval_preds):
 
     decoded_preds, decoded_labels, decoded_input_ids = postprocess_text(decoded_preds, decoded_labels, decoded_input_ids)
     
-
     # bleu
-    bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels, tokenize='ja-mecab')
+    if tgt_lang == "ja":
+        print ("Hi")
+        bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels, tokenize='ja-mecab')
+    else: 
+        bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels)
     result = {"bleu": bleu["score"]}
 
     # comet
@@ -67,6 +74,12 @@ def compute_metrics(tokenizer, eval_preds):
     result["gen_len"] = np.mean(prediction_lens)
     result = {k: round(v, 4) for k, v in result.items()}
     print(result)
+
+    # Store the score
+    with open(output_dir+'/test_score.txt','w', encoding='utf8') as wf:
+        for key, value in result.items():
+            wf.write(f"{key}: {value}\n") #ensure_ascii=False
+
     return result
 
 
