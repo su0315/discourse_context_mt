@@ -2,23 +2,23 @@ generic:
   dataset: /home/sumire/discourse_context_mt/data/BSD-master/
   src_lang: en
   tgt_lang: ja
-  src_context: 1
-  tgt_context: 0
+  src_context: 0
+  tgt_context: 1
   dropout: 0.0
-  tgt_sep: False
+  tgt_sep: True
   speaker: False
-  random_context: False
+  random_context: True
   tag: True
   
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/2-1 # Modify here
+  output_dir: ./results/bsd_en-ja/1-2 # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/2-1                      
+  logging_dir: ./logs/bsd_en-ja/1-2                     
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 16  #64 
+  per_device_eval_batch_size: 4  #64 # 16
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3
@@ -38,10 +38,11 @@ training_args:
   logging_steps: 1000
   #gradient_accumulation_steps=1000,
   #half_precision_backend="apex",
-  eval_steps: 5000
-  save_steps: 5000
+  eval_steps: 5000 ####################################################################################　CHANGETHISTHIS to 1000
+  save_steps: 5000 ##################################################################################
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
+  eval_accumulation_steps: 10
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback

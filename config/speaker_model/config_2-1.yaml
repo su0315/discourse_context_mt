@@ -6,9 +6,9 @@ generic:
   tgt_context: 0
   dropout: 0.0
   tgt_sep: False
-  speaker: False
+  speaker: True
   random_context: False
-  tag: True
+  tag: False
   
 
 training_args:

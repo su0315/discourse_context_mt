@@ -5,6 +5,10 @@ generic:
   src_context: 4
   tgt_context: 0
   dropout: 0.0
+  tgt_sep: False
+  speaker: False
+  random_context: False
+  tag: False
   
 
 training_args:
@@ -22,9 +26,10 @@ training_args:
     - all # occasionally "tensorboard"
   fp16: True
   do_eval: True
+  do_predict: True
   metric_for_best_model: comet # eval_bleu.metric,
   load_best_model_at_end: True
-  num_train_epochs: 10
+  num_train_epochs: 5
   greater_is_better: True
   predict_with_generate: True
   do_train: True
@@ -33,11 +38,11 @@ training_args:
   logging_steps: 1000
   #gradient_accumulation_steps=1000,
   #half_precision_backend="apex",
-  eval_steps: 1000
-  save_steps: 1000
+  eval_steps: 5000
+  save_steps: 5000
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback
-  early_stopping_patience: 10
+  early_stopping_patience: 3
