@@ -76,12 +76,26 @@ def main():
     tokenizer.add_special_tokens({"sep_token":"</t>"})
     #tokenizer.add_special_tokens({"sep1_token":"</t1>"})
 
-    # Add special token for speaker 1 to 5
-    
+    # Add contextual special tokens
+    special_tokens = []
+
     if speaker:
-        special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
-        tokenizer.add_special_tokens(special_tokens_dict)#num_added_toks = 
-    
+        speaker_tags = ['<CurrSpeak>','<DiffSpeak>']
+        for i in speaker_tags:
+            special_tokens.append(i)
+        #special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
+        #tokenizer.add_special_tokens(special_tokens_dict)
+
+    if tag:
+        scene_tags = ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']
+        for i in scene_tags:
+            special_tokens.append(i)
+        #special_tokens_dict = {'additional_special_tokens': ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']}
+        #tokenizer.add_special_tokens(special_tokens_dict)
+    special_tokens_dict = {'additional_special_tokens': special_tokens}
+    tokenizer.add_special_tokens(special_tokens_dict)
+
+    #print ("speacial_tokens_dict", special_tokens_dict)
     model.resize_token_embeddings(len(tokenizer))
     
 
@@ -93,18 +107,18 @@ def main():
 
     # Apply the preprocess function for the entire dataset 
     tokenized_datasets = dataset.map(
-    partial(preprocess.preprocess_function, src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, 0.0, tgt_sep, tokenizer),
+    partial(preprocess.preprocess_function, src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, 0.0, tgt_sep, tokenizer),
     batched=True,
     remove_columns=dataset["train"].column_names, # train
     )
     
     if cw_dropout_rate > 0:
         tokenized_datasets['train'] = dataset['train'].map(
-        partial(preprocess.preprocess_function, src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
+        partial(preprocess.preprocess_function, src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
         batched=True,
         remove_columns=dataset["train"].column_names, # train
         )
-    print(tokenized_datasets.keys())
+    #print(tokenized_datasets.keys())
 
     # Create a batch using DataCollator and pad dinamically
     data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="pt") 
@@ -126,25 +140,8 @@ def main():
     
     trainer.train()
     model.eval()
-    preds, labels, scores = trainer.predict(tokenized_datasets["test"])
+    trainer.predict(tokenized_datasets["test"])
 
-
-    """
-    # Inference on Test dataset 
-    # Load Test data
-    file_path = file_path
-    test_data_files = {"test": f"{file_path}test.json"}
-    test_data = load_dataset("json", data_files=test_data_files)
-
-    print ("test_data", test_data["test"])
-    inference.eval_on_inference(
-        model=model, 
-        tokenizer=tokenizer, 
-        data=test_data["test"], 
-        src_lang=src_lang, 
-        tgt_lang=tgt_lang, 
-        output_dir=output_dir)
-    """
 
 if __name__ == "__main__":
     main()
