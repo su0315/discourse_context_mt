@@ -30,8 +30,7 @@ def read_arguments() -> ArgumentParser:
     parser.add_argument("--generic.tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
     parser.add_argument("--generic.speaker", type=bool, default=False)
     parser.add_argument("--generic.random_context", type=bool, default=False)
-
-    #parser.add_argument("--training_args", type=Seq2SeqTrainingArguments)
+    parser.add_argument("--generic.tag", type=bool, default=False)
     
     return parser
     
@@ -63,6 +62,7 @@ def main():
     speaker = cfg.generic.speaker
     random_context = cfg.generic.random_context
     output_dir = cfg.training_args.output_dir
+    tag = cfg.generic.tag
     
 
    
@@ -77,15 +77,11 @@ def main():
     #tokenizer.add_special_tokens({"sep1_token":"</t1>"})
 
     # Add special token for speaker 1 to 5
-    """
+    
     if speaker:
-        max_num_speaker = 5
-        for i in range(max_num_speaker):
-            tokenizer.add_special_tokens({f"speaker{i}_token":f"<S{i}>"})
-            #print(f"speaker_token{i}",tokenizer.get_added_vocab(), tokenizer.convert_tokens_to_ids(f"<S{i}>"), tokenizer.decode(tokenizer.speaker1_token_id))
-        
-        #tokenizer.add_special_tokens({"speaker0_token":"<S0>"})
-    """
+        special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
+        tokenizer.add_special_tokens(special_tokens_dict)#num_added_toks = 
+    
     model.resize_token_embeddings(len(tokenizer))
     
 
@@ -102,11 +98,12 @@ def main():
     remove_columns=dataset["train"].column_names, # train
     )
     
-    tokenized_datasets['train'] = dataset['train'].map(
-    partial(preprocess.preprocess_function, src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
-    batched=True,
-    remove_columns=dataset["train"].column_names, # train
-    )
+    if cw_dropout_rate > 0:
+        tokenized_datasets['train'] = dataset['train'].map(
+        partial(preprocess.preprocess_function, src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
+        batched=True,
+        remove_columns=dataset["train"].column_names, # train
+        )
     print(tokenized_datasets.keys())
 
     # Create a batch using DataCollator and pad dinamically
