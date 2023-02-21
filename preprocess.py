@@ -6,23 +6,30 @@ from functools import partial
 import torch
 import random
 
-max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
+#max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
 # 520 # 128
 
 
-def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer, data): 
+def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer, data): 
     new_inputs = []
     new_targets = []
     new_tgt_contexts = []
 
+    if tag:
+        scene_tags = data["tag"]
+        # scene tags are: '<face-to-face conversation>', '<phone call>', '<general chatting>', '<meeting>', '<training>' and '<presentation>'
+
+        for idx, tag in enumerate(scene_tags):
+            scene_tags[idx] = f"<{scene_tags[idx]}>"
+
     # Iterate over every documents
-    for doc in data["conversation"]:
+    for doc_idx, doc in enumerate(data["conversation"]):
         doc_input = [sent['en_sentence'] for sent in doc] 
         doc_target = [sent['ja_sentence'] for sent in doc]
 
         if speaker:
             src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
-    
+        
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
         new_doc_input = []
@@ -36,7 +43,12 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
                 src_context_size = random.randint(0, src_context_size) 
             
             if src_context_size == 0:
-                new_doc_input.append(ip)
+                if tag:
+                    #print (f"{scene_tags[doc_idx]}{context_sent}")
+                    new_doc_input.append(f"{scene_tags[doc_idx]}{context_sent}")
+                    
+                else:    
+                    new_doc_input.append(ip)
     
             else:    
                 context_list = []  
@@ -50,37 +62,48 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
                         if speaker:
                             context_speaker = src_speakers[context_idx]
                             if context_speaker != current_speaker:
-                                concat_speaker = f"<DiffSpeak>{context_sent}"
+                                context_sent = f"<DiffSpeak>{context_sent}"
                                 #print ("concat_speaker", concat_speaker)
-                                context_list.append(concat_speaker)
                                 
                             else:
-                                concat_speaker = f"<CurrSpeak>{context_sent}"
+                                context_sent = f"<CurrSpeak>{context_sent}"
                                 #print ("concat_speaker", concat_speaker)
-                                context_list.append(concat_speaker)
                         
-                        else:
-                            #Store the context in a list
-                            context_list.append(context_sent)
-                #print ("context_list", context_list)
+                        #Store the context in a list
+                        context_list.append(context_sent)
 
+                #print ("context_list", context_list)
                     
                 if len(context_list) ==0:
-                    if speaker:
-                        concat_speaker = f"<CurrSpeak>{ip}"
+                    sent = ip
+                    if speaker or tag:
+                        if not tag:
+                            sent = f"<CurrSpeak>{sent}"
                         #print ("concat_speaker2:", concat_speaker)
-                        new_doc_input.append(concat_speaker)
-                    else:
-                        new_doc_input.append(ip)
+                        if not speaker:
+                            sent = f"{scene_tags[doc_idx]}{sent}"
+                            new_doc_input.append(concat_tag)
+                        if tag and speaker:
+                            sent = f"{scene_tags[doc_idx]}<CurrSpeak>{sent}"
+                        
+                    new_doc_input.append(sent)####here was the problem
                     
                 else:
                     concat_contexts = "</t>".join(context_list)
-                    if speaker:
-                        concat_speaker = f"<CurrSpeak>{ip}"
-                        new_input = "</t>".join([concat_contexts,concat_speaker])
-                    else:
-                        new_input = "</t>".join([concat_contexts,ip])
+                    sent = ip
+                    if speaker or tag:
+                        if not tag:
+                            sent = f"<CurrSpeak>{ip}"
+                            #new_input = "</t>".join([concat_contexts,sent])
+                        if not speaker:
+                            concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
+                            #new_input = "</t>".join([concat_contexts,sent])
+                        if tag and speaker:
+                            concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
+                            sent = f"<CurrSpeak>{ip}"
+                    new_input = "</t>".join([concat_contexts,ip])
                     new_doc_input.append(new_input)
+                    
             
         new_inputs.append(new_doc_input)
 
@@ -90,18 +113,11 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
         new_doc_context = [] 
 
         for idx, tgt in enumerate (doc_target):
-            
-            """
-            if speaker: 
-                tgt = ": ".join([tgt_speakers[idx], tgt])
-                print ("concat_speaker", tgt)
-            """
-
-            target_context_size = tgt_context_size
+                target_context_size = tgt_context_size
 
             if random_context:
                 target_context_size = random.randint(0, tgt_context_size)
-            
+                
             if target_context_size == 0:
                 new_doc_target.append(tgt) 
                 new_doc_context.append("</t>") # SU: to make context_ids the same shape with input_ids 
@@ -149,13 +165,13 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
 
     # Tokenize input and target 
     model_inputs = tokenizer(
-            new_inputs, text_target=new_targets, max_length=max_length, truncation=False, padding = "max_length"
+            new_inputs, text_target=new_targets, truncation=False, padding = True
         )
 
     # Tokenize context indipendently
     if tgt_context_size>0: 
         #print ("new_tgt_contexts", new_tgt_contexts)#SU
-        context_out  = tokenizer(new_tgt_contexts, max_length=max_length,  truncation=False, padding = 'max_length') ### SU　
+        context_out  = tokenizer(new_tgt_contexts, truncation=False, padding = True) ### SU　
         context_ids = context_out['input_ids'] ### SU
         context_attn = context_out['attention_mask'] ### SU
         
@@ -163,8 +179,8 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
         model_inputs['context_ids']=context_ids
         model_inputs['context_attention_mask']=context_attn
 
-        print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=False))
-        print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
+        #print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=False))
+        #print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
        
     if cw_dropout_rate>0:
         for i,inst in enumerate(model_inputs['input_ids']):
@@ -204,8 +220,20 @@ if __name__ == "__main__":
     model.resize_token_embeddings(len(tokenizer))
     cw_dropout_rate=0.2
     tgt_sep = True
+    tag = True
+    speaker = True
+    random_context = False
+    if speaker:
+        special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
+        tokenizer.add_special_tokens(special_tokens_dict)
+
+    if tag:
+        special_tokens_dict = {'additional_special_tokens': ['<Face-to-Face>','<Phone call>', '<General chatting>', '<Meeting>', '<Training>', '<Presentation>']}
+    
+    model.resize_token_embeddings(len(tokenizer))
+    
     #preprocess_function(4, 4, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
-    preprocess_function(source_lang, target_lang, False, 4, 4, False, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
+    preprocess_function(source_lang, target_lang, tag, speaker, 4, 4, random_context, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
 
 
     
