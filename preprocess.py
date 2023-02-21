@@ -9,28 +9,11 @@ import random
 max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
 # 520 # 128
 
+
 def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer, data): 
     new_inputs = []
     new_targets = []
     new_tgt_contexts = []
-
-    """
-    if speaker: 
-        for doc in data["conversation"]:
-            src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
-            speaker_ids = []
-        
-            for idx, speaker in enumerate(src_speakers):
-                speaker_ids.append(idx)
-            
-            print ("speaker_ids:", speaker_ids)
-        max_speaker_ids = max([max(id) for doc in speaker_ids for id in doc])
-        print ("max_speaker_ids", max_speaker_ids)
-
-        for i in range(max_speaker_ids+1):
-            tokenizer.add_special_tokens({f"speaker_token_{i}":"<S{i}>"})
-        model.resize_token_embeddings(len(tokenizer))
-    """
 
     # Iterate over every documents
     for doc in data["conversation"]:
@@ -39,28 +22,19 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
 
         if speaker:
             src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
-            speaker_ids = []
-        
-            for idx, speaker in enumerate(src_speakers):
-                speaker_ids.append(idx)
-            print ("speaker_ids:", speaker_ids)
-       
+    
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
         new_doc_input = []
 
         for idx, ip in enumerate (doc_input):
-            if speaker:
-                #speaker_token = f"<S{speaker_ids[idx]}>"
-                #print (speaker_token)
-                #print ("speaker_token", speaker_token) 
-                #ip = f"{tokenizer.speaker_token_}".join([src_speakers[idx], ip])
-                #ip = speaker_token.join([src_speakers[idx], ip])
-                ip = ": ".join([src_speakers[idx], ip])
-                print ("concat_speaker", ip)
+            if speaker: 
+                current_speaker = src_speakers[idx]
+                #print ("current_speaker", current_speaker)
 
             if random_context:
                 src_context_size = random.randint(0, src_context_size) 
+            
             if src_context_size == 0:
                 new_doc_input.append(ip)
     
@@ -72,15 +46,40 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
                     
                     # If context idx is not the left side of the beggining of the doc_inputs
                     if context_idx >= 0:
-                        #Store the context in a list
-                        context_list.append(doc_input[context_idx])
+                        context_sent = doc_input[context_idx]
+                        if speaker:
+                            context_speaker = src_speakers[context_idx]
+                            if context_speaker != current_speaker:
+                                concat_speaker = f"<DiffSpeak>{context_sent}"
+                                #print ("concat_speaker", concat_speaker)
+                                context_list.append(concat_speaker)
+                                
+                            else:
+                                concat_speaker = f"<CurrSpeak>{context_sent}"
+                                #print ("concat_speaker", concat_speaker)
+                                context_list.append(concat_speaker)
+                        
+                        else:
+                            #Store the context in a list
+                            context_list.append(context_sent)
+                #print ("context_list", context_list)
+
                     
                 if len(context_list) ==0:
-                    new_doc_input.append(ip)
+                    if speaker:
+                        concat_speaker = f"<CurrSpeak>{ip}"
+                        #print ("concat_speaker2:", concat_speaker)
+                        new_doc_input.append(concat_speaker)
+                    else:
+                        new_doc_input.append(ip)
                     
                 else:
                     concat_contexts = "</t>".join(context_list)
-                    new_input = "</t>".join([concat_contexts,ip])
+                    if speaker:
+                        concat_speaker = f"<CurrSpeak>{ip}"
+                        new_input = "</t>".join([concat_contexts,concat_speaker])
+                    else:
+                        new_input = "</t>".join([concat_contexts,ip])
                     new_doc_input.append(new_input)
             
         new_inputs.append(new_doc_input)
@@ -150,13 +149,13 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
 
     # Tokenize input and target 
     model_inputs = tokenizer(
-            new_inputs, text_target=new_targets, max_length=max_length, truncation=False, padding = True
+            new_inputs, text_target=new_targets, max_length=max_length, truncation=False, padding = "max_length"
         )
 
     # Tokenize context indipendently
     if tgt_context_size>0: 
         #print ("new_tgt_contexts", new_tgt_contexts)#SU
-        context_out  = tokenizer(new_tgt_contexts, max_length=max_length,  truncation=False, padding = True) ### SU　
+        context_out  = tokenizer(new_tgt_contexts, max_length=max_length,  truncation=False, padding = 'max_length') ### SU　
         context_ids = context_out['input_ids'] ### SU
         context_attn = context_out['attention_mask'] ### SU
         
@@ -164,8 +163,8 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
         model_inputs['context_ids']=context_ids
         model_inputs['context_attention_mask']=context_attn
 
-        print ("\nDecoded tokinized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:5], skip_special_tokens=True))
-        print ("\nDecoded tokinized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:5],skip_special_tokens=True))
+        print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=False))
+        print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
        
     if cw_dropout_rate>0:
         for i,inst in enumerate(model_inputs['input_ids']):
@@ -180,8 +179,8 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-        print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][30:40], skip_special_tokens=True))
-        print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][30:40], skip_special_tokens=True))
+    print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10], skip_special_tokens=False))
+    print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:10], skip_special_tokens=False))
 
     return model_inputs
 
@@ -190,7 +189,7 @@ def preprocess_function(src_lang, tgt_lang, speaker, src_context_size, tgt_conte
 if __name__ == "__main__":
     # Load the dataset
     file_path = '/home/sumire/discourse_context_mt/data/BSD-master/'
-    data_files = {"train": f"{file_path}short_train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}short_test.json"}
+    data_files = {"train": f"{file_path}short_train.json", "validation": f"{file_path}short_dev.json", "test": f"{file_path}short_test.json"}
     dataset = load_dataset("json", data_files=data_files)
     
     # Tokenize using "facebook/mbart-large-50-many-to-many-mmt"
@@ -205,6 +204,8 @@ if __name__ == "__main__":
     model.resize_token_embeddings(len(tokenizer))
     cw_dropout_rate=0.2
     tgt_sep = True
-    preprocess_function(4, 4, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
-    
+    #preprocess_function(4, 4, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
+    preprocess_function(source_lang, target_lang, False, 4, 4, False, cw_dropout_rate, tgt_sep, tokenizer, dataset['train'])
+
+
     
