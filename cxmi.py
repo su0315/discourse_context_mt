@@ -32,7 +32,7 @@ def read_arguments() -> ArgumentParser:
     parser.add_argument("--generic.random_context", type=bool, default=False)
     parser.add_argument("--generic.tag", type=bool, default=False)
     parser.add_argument("--generic.cxmi", type=bool, default=True)
-    parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ")
+    #parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ")
     
     return parser
 
@@ -64,10 +64,10 @@ def main():
     output_dir = cfg.training_args.output_dir
     tag = cfg.generic.tag
     cxmi = cfg.generic.cxmi
-    checkpoint = cfg.generic.checkpoint
+    #checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
-    model_checkpoint = checkpoint
+    model_checkpoint = "/home/sumire/discourse_context_mt/results/bsd_en-ja/random_5-5/checkpoint-20000"
     configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
