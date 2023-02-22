@@ -33,7 +33,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
         new_doc_input = []
-
+        randoms = []
         for idx, ip in enumerate (doc_input):
             if speaker: 
                 current_speaker = src_speakers[idx]
@@ -41,11 +41,12 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
 
             if random_context:
                 src_context_size = random.randint(0, src_context_size) 
+                randoms.append(src_context_size)
             
             if src_context_size == 0:
                 if tag:
-                    #print (f"{scene_tags[doc_idx]}{context_sent}")
-                    new_doc_input.append(f"{scene_tags[doc_idx]}{context_sent}")
+                    #print (f"{scene_tags[doc_idx]}{ip}")
+                    new_doc_input.append(f"{scene_tags[doc_idx]}{ip}")
                     
                 else:    
                     new_doc_input.append(ip)
@@ -104,7 +105,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                     new_input = "</t>".join([concat_contexts,ip])
                     new_doc_input.append(new_input)
                     
-            
+        print ("randoms:", randoms)   
         new_inputs.append(new_doc_input)
 
         # Target side
@@ -113,7 +114,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         new_doc_context = [] 
 
         for idx, tgt in enumerate (doc_target):
-                target_context_size = tgt_context_size
+            target_context_size = tgt_context_size
 
             if random_context:
                 target_context_size = random.randint(0, tgt_context_size)
@@ -159,9 +160,6 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
     new_inputs = [sent for doc in new_inputs for sent in doc]
     new_targets = [sent for doc in new_targets for sent in doc] 
     new_tgt_contexts = [sent for doc in new_tgt_contexts for sent in doc]
-    #context_out  = tokenizer(new_tgt_contexts, max_length=max_length,  truncation=False, padding=True) # Modify False
-    #context_ids = context_out['input_ids'] #
-    #context_attn = context_out['attention_mask'] #
 
     # Tokenize input and target 
     model_inputs = tokenizer(
