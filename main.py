@@ -79,19 +79,19 @@ def main():
     # Add contextual special tokens
     special_tokens = []
 
-    if speaker:
-        speaker_tags = ['<CurrSpeak>','<DiffSpeak>']
-        for i in speaker_tags:
-            special_tokens.append(i)
-        #special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
-        #tokenizer.add_special_tokens(special_tokens_dict)
+    # Add Speaker Tags
+    speaker_tags = ['<CurrSpeak>','<DiffSpeak>']
+    for i in speaker_tags:
+        special_tokens.append(i)
+    #special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
+    #tokenizer.add_special_tokens(special_tokens_dict)
 
-    if tag:
-        scene_tags = ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']
-        for i in scene_tags:
-            special_tokens.append(i)
-        #special_tokens_dict = {'additional_special_tokens': ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']}
-        #tokenizer.add_special_tokens(special_tokens_dict)
+    # Add Scene Tags
+    scene_tags = ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']
+    for i in scene_tags:
+        special_tokens.append(i)
+    #special_tokens_dict = {'additional_special_tokens': ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']}
+    #tokenizer.add_special_tokens(special_tokens_dict)
     special_tokens_dict = {'additional_special_tokens': special_tokens}
     tokenizer.add_special_tokens(special_tokens_dict)
 
@@ -101,7 +101,7 @@ def main():
 
     # Load the train and eval dataset for training
     file_path = file_path
-    data_files = {"train": f"{file_path}short_train.json", "validation": f"{file_path}short_dev.json", "test": f"{file_path}short_test.json"}
+    data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
 
@@ -140,8 +140,11 @@ def main():
     
     trainer.train()
     model.eval()
-    trainer.predict(tokenized_datasets["test"])
-
+    preds, label_ids, metrics = trainer.predict(tokenized_datasets["test"])
+    print ("predict")
+    print ("preds:", preds)
+    print ("label_ids:", label_ids)
+    print ("metrics:", metrics)
 
 if __name__ == "__main__":
     main()
