@@ -8,7 +8,7 @@ generic:
   tgt_sep: False
   speaker: False
   random_context: False
-  tag: True
+  tag: False
   
 
 training_args:
