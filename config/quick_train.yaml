@@ -2,12 +2,12 @@ generic:
   dataset: /home/sumire/discourse_context_mt/data/BSD-master/
   src_lang: en
   tgt_lang: ja
-  src_context: 1
-  tgt_context: 1
+  src_context: 0
+  tgt_context: 0
   dropout: 0.2
   tgt_sep: True
   speaker: True
-  random_context: True
+  random_context: False
   tag: True
   
   

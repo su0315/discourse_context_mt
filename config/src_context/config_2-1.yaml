@@ -7,8 +7,8 @@ generic:
   dropout: 0.0
   tgt_sep: False
   speaker: False
-  random_context: True
-  tag: True
+  random_context: False
+  tag: False
   
 
 training_args:
