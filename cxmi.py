@@ -67,7 +67,7 @@ def main():
     #checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
-    model_checkpoint = "/home/sumire/discourse_context_mt/results/bsd_en-ja/random_5-5/checkpoint-20000"
+    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/cxmi/random_5-5/checkpoint-20000"
     configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
@@ -139,13 +139,13 @@ def main():
     predictions = trainer.predict(tokenized_datasets["test"])
     print ("predict")
     print (len(predictions.predictions))
-    print (predictions.predictions)
+    #print (predictions.predictions)
     for preds in predictions.predictions:
-        print ("preds:", preds)
+        #print ("preds:", preds)
         print ("preds_shape:", preds.shape)
-        for pred in preds:
+        #for pred in preds:
             #print ("inside preds", pred[:3])
-            print ("inside_preds_shape", pred.shape)
+            #print ("inside_preds_shape", pred.shape)
         
     
     print ("label_ids_shape:", predictions.label_ids.shape)
