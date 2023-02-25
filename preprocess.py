@@ -83,7 +83,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                         #print ("concat_speaker2:", concat_speaker)
                         if not speaker:
                             sent = f"{scene_tags[doc_idx]}{sent}"
-                            new_doc_input.append(concat_tag)
+                        
                         if tag and speaker:
                             sent = f"{scene_tags[doc_idx]}<CurrSpeak>{sent}"
                         
@@ -105,7 +105,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                     new_input = "</t>".join([concat_contexts,ip])
                     new_doc_input.append(new_input)
                     
-        print ("randoms:", randoms)   
+        #print ("randoms:", randoms)   
         new_inputs.append(new_doc_input)
 
         # Target side

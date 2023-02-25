@@ -99,7 +99,7 @@ def main():
     model.resize_token_embeddings(len(tokenizer))
     
 
-    # Load the train and eval dataset for training
+    # Load the dataset for training
     file_path = file_path
     data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
