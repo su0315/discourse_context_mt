@@ -18,21 +18,26 @@ import torch
 
 def read_arguments() -> ArgumentParser:
     parser = ArgumentParser(description="Command for training models.")
+    
+    parser.add_argument("--cfg", action=ActionConfigFile)
     parser.add_class_arguments(Seq2SeqTrainingArguments, "training_args")
     parser.add_class_arguments(EarlyStoppingCallback, "early_stopping")
-    parser.add_argument("--cfg", action=ActionConfigFile)
     parser.add_argument("--generic.tgt_lang", required=True, help="souce language")
     parser.add_argument("--generic.src_lang", required=True)
     parser.add_argument("--generic.dataset", required=True, metavar="FILE", help="path to model file for bsd is '/home/sumire/discourse_context_mt/data/BSD-master/'")
-    parser.add_argument("--generic.src_context",type=int, default="src", help="the number of the target context sentence for each input")
-    parser.add_argument("--generic.tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
-    parser.add_argument("--generic.dropout", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
-    parser.add_argument("--generic.tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
+    parser.add_argument("--generic.base_src_context",type=int, default="src", help="the number of the target context sentence for each input")
+    parser.add_argument("--generic.base_tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
+    parser.add_argument("--generic.base_dropout", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
+    parser.add_argument("--generic.base_tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
     parser.add_argument("--generic.speaker", type=bool, default=False)
     parser.add_argument("--generic.random_context", type=bool, default=False)
     parser.add_argument("--generic.tag", type=bool, default=False)
     parser.add_argument("--generic.cxmi", type=bool, default=True)
-    #parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ")
+    #parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ") 
+    parser.add_argument("--generic.context_src_context",type=int, default="src", help="the number of the target context sentence for each input")
+    parser.add_argument("--generic.context_tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
+    parser.add_argument("--generic.context_dropout", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
+    parser.add_argument("--generic.context_tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
     
     return parser
 
@@ -46,28 +51,34 @@ def initialize_trainer(configs) -> TrainingArguments:
 
     return trainer_args, callbacks
 
-def main():
+def pred_prob_dist(model_type):
     parser = read_arguments()
      
     cfg = parser.parse_args()
 
-    print(cfg)
+    if model_type == "base":
+        src_context_size = cfg.generic.base_src_context
+        tgt_context_size = cfg.generic.base_tgt_context
+        cw_dropout_rate = cfg.generic.base_dropout
+        tgt_sep = cfg.generic.base_tgt_sep
+
+    elif model_type == "context":
+        src_context_size = cfg.generic.context_src_context
+        tgt_context_size = cfg.generic.context_tgt_context
+        cw_dropout_rate = cfg.generic.context_dropout
+        tgt_sep = cfg.generic.context_tgt_sep
+
     src_lang = cfg.generic.src_lang
     tgt_lang = cfg.generic.tgt_lang
     file_path = cfg.generic.dataset
-    src_context_size = cfg.generic.src_context
-    tgt_context_size = cfg.generic.tgt_context
-    cw_dropout_rate = cfg.generic.dropout
-    tgt_sep = cfg.generic.tgt_sep
     speaker = cfg.generic.speaker
     random_context = cfg.generic.random_context
     output_dir = cfg.training_args.output_dir
     tag = cfg.generic.tag
-    cxmi = cfg.generic.cxmi
     #checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
-    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/cxmi/random_5-5/checkpoint-20000"
+    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/Newest_result/cxmi_random_model/random_5-5/checkpoint-20000"
     configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
@@ -110,13 +121,6 @@ def main():
     remove_columns=dataset["test"].column_names, # train
     )
 
-    if cw_dropout_rate > 0:
-        tokenized_datasets['train'] = dataset['train'].map(
-        partial(preprocess.preprocess_function, src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
-        batched=True,
-        remove_columns=dataset["train"].column_names, # train
-        )
-
     # Create a batch using DataCollator and pad dinamically
     data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="pt") 
     
@@ -137,20 +141,33 @@ def main():
   
     model.eval()
     predictions = trainer.predict(tokenized_datasets["test"])
-    print ("predict")
-    print (len(predictions.predictions))
+    prob_dist = predictions[0] # The second element of the predictions are hidden states
+    
+    
+    print ("prob_dist.shape", prob_dist.shape)
+    return prob_dist
+
     #print (predictions.predictions)
-    for preds in predictions.predictions:
+    #for preds in predictions.predictions:
         #print ("preds:", preds)
-        print ("preds_shape:", preds.shape)
+        #print ("preds_shape:", preds.shape)
         #for pred in preds:
             #print ("inside preds", pred[:3])
             #print ("inside_preds_shape", pred.shape)
         
-    
-    print ("label_ids_shape:", predictions.label_ids.shape)
-    #print ("metrics_shape:", predictions.metrics.shape)
 
+def cxmi():
+    base_prob_dist = pred_prob_dist(model_type="base")
+    context_prob_dist = pred_prob_dist(model_type="context")
+
+    cxmi = context_prob_dist - base_prob_dist
+
+    return cxmi
+
+def main():
+    score = cxmi()
+    print ("cxmi shape", score.shape)
+    print (f"CXMI: {np.mean(score):.05f}")
     
 if __name__ == "__main__":
     main()
