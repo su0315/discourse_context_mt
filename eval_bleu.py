@@ -14,7 +14,7 @@ def postprocess_text(preds, labels, input_ids):
     return preds, labels, input_ids
 
 
-def compute_metrics(output_dir,tgt_lang, tokenizer, eval_preds):
+def compute_metrics(output_dir, tgt_lang, tokenizer, eval_preds):
     preds, labels, input_ids = eval_preds # Check the location of input_ids is appropriate
     
     # Preds
@@ -22,12 +22,9 @@ def compute_metrics(output_dir,tgt_lang, tokenizer, eval_preds):
         preds = preds
     
     sep = tokenizer.sep_token_id
-    print ("checking preds_before_split:", preds[:10][:5])
     preds = [ np.array_split(item, np.where(item == sep)[-1])[-1]  for item in preds ]
-    print ("checking preds after split:")
-    print (preds[:10][:5])
     decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-    print ("decoded_preds: ", decoded_preds[:5])
+    #print ("decoded_preds: ", decoded_preds[:5])
     #with open('./results/bsd_en-ja/bleu_ja_pred/inference.json', 'w', encoding='utf8') as json_file:
         #json.dump(decoded_preds, json_file, ensure_ascii=False,)
     
@@ -39,19 +36,19 @@ def compute_metrics(output_dir,tgt_lang, tokenizer, eval_preds):
     #Labels
     labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
     labels= [ np.array_split(item, np.where(item == sep)[-1])[-1]  for item in labels ]
-    print ("checking labels_token:")
-    print (labels[:10][:5])
+    #print ("checking labels_token:")
+    #print (labels[:10][:5])
     decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-    print ("decoded_labels:", decoded_labels[:5])
+    #print ("decoded_labels:", decoded_labels[:5])
 
     
     # Input_ids
     # For comet source info
     input_ids = np.where(input_ids != -100, input_ids, tokenizer.pad_token_id)
-    print ("checking input_ids before split:", input_ids[:10][:5])
+    #print ("checking input_ids before split:", input_ids[:10][:5])
     input_ids = [ np.array_split(item, np.where(item == sep)[-1])[-1]  for item in input_ids ]
-    print ("checking input_ids3 after split:")
-    print (input_ids[:10][:5])
+    #print ("checking input_ids3 after split:")
+    #print (input_ids[:10][:5])
     decoded_input_ids = tokenizer.batch_decode(input_ids, skip_special_tokens=True)
     
 
@@ -59,7 +56,6 @@ def compute_metrics(output_dir,tgt_lang, tokenizer, eval_preds):
     
     # bleu
     if tgt_lang == "ja":
-        print ("Hi")
         bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels, tokenize='ja-mecab')
     else: 
         bleu = metric1.compute(predictions=decoded_preds, references=decoded_labels)
