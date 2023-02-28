@@ -6,8 +6,9 @@ from functools import partial
 import torch
 import random
 
-#max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
-# 520 # 128
+max_length = 128 # Should be modified considering bsd's max input size is 278 (en) and 110 (en) , but ami's max input size is 662 (en) and 302 (ja)
+# 520 # 128 #256
+# random5_5 was 256
 
 
 def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer, data): 
@@ -33,7 +34,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
         new_doc_input = []
-        randoms = []
+        
         for idx, ip in enumerate (doc_input):
             if speaker: 
                 current_speaker = src_speakers[idx]
@@ -41,7 +42,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
 
             if random_context:
                 src_context_size = random.randint(0, src_context_size) 
-                randoms.append(src_context_size)
+                #randoms.append(src_context_size)
             
             if src_context_size == 0:
                 if tag:
@@ -87,27 +88,27 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                         if tag and speaker:
                             sent = f"{scene_tags[doc_idx]}<CurrSpeak>{sent}"
                         
-                    new_doc_input.append(sent)####here was the problem
+                    new_doc_input.append(sent)
                     
                 else:
                     concat_contexts = "</t>".join(context_list)
                     sent = ip
                     if speaker or tag:
                         if not tag:
-                            sent = f"<CurrSpeak>{ip}"
+                            sent = f"<CurrSpeak>{sent}"
                             #new_input = "</t>".join([concat_contexts,sent])
                         if not speaker:
                             concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
                             #new_input = "</t>".join([concat_contexts,sent])
                         if tag and speaker:
                             concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
-                            sent = f"<CurrSpeak>{ip}"
-                    new_input = "</t>".join([concat_contexts,ip])
+                            sent = f"<CurrSpeak>{sent}"
+                    new_input = "</t>".join([concat_contexts,sent])
                     new_doc_input.append(new_input)
                     
         #print ("randoms:", randoms)   
         new_inputs.append(new_doc_input)
-
+        
         # Target side
         new_doc_target = []
         # Separate context and current sentences per doc
@@ -161,23 +162,35 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
     new_targets = [sent for doc in new_targets for sent in doc] 
     new_tgt_contexts = [sent for doc in new_tgt_contexts for sent in doc]
 
-    # Tokenize input and target 
+    # Tokenize input and target ###########Now experimenting##########################
+    
     model_inputs = tokenizer(
-            new_inputs, text_target=new_targets, truncation=False, padding = True
-        )
-
+            new_inputs, text_target=new_targets, truncation=True,  max_length=max_length, padding = "max_length" ) # "max_length", truncation_side="left" #max_length=max_length,
+    """
+    # Old Setting Without Max length 
+    # model_inputs = tokenizer(
+            new_inputs, text_target=new_targets, truncation=False, padding = True )
+    """
     # Tokenize context indipendently
     if tgt_context_size>0: 
-        #print ("new_tgt_contexts", new_tgt_contexts)#SU
-        context_out  = tokenizer(new_tgt_contexts, truncation=False, padding = True) ### SU　
+        #print ("new_tgt_contexts", new_tgt_contexts[:5])#SU
+        
+        context_out  = tokenizer(new_tgt_contexts,  truncation=True,  max_length=max_length, padding = "max_length" ) ### SU　"max_length", truncation_side="left", max_length=max_length,
+        """
+        # Old Setting Without Max length 
+        # context_out  = tokenizer(new_tgt_contexts,  truncation=False, padding = True)
+        """
         context_ids = context_out['input_ids'] ### SU
         context_attn = context_out['attention_mask'] ### SU
         
         # Add tokenized context information on model_inputs
         model_inputs['context_ids']=context_ids
+        #print ("model_inputs['context_ids']", model_inputs['context_ids'][10:20])
         model_inputs['context_attention_mask']=context_attn
+        #print ("model_inputs['context_attention_mask']", model_inputs['context_attention_mask'][:5])
+        #print ("model_inputs['input_ids']", model_inputs["input_ids"][:5])
 
-        #print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=False))
+        #print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=True))
         #print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
        
     if cw_dropout_rate>0:
