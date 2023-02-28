@@ -15,6 +15,7 @@ from jsonargparse import (ActionConfigFile, ArgumentParser, Namespace,
 from datasets import disable_caching
 disable_caching()
 import torch
+from torch import nn
 
 def read_arguments() -> ArgumentParser:
     parser = ArgumentParser(description="Command for training models.")
@@ -78,14 +79,13 @@ def pred_prob_dist(model_type):
     #checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
-    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/Newest_result/cxmi_random_model/random_5-5/checkpoint-20000"
-    configuration = MBartConfig
+    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-5_max_128/checkpoint-5000"
+    #configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
 
     # Add special token to separate context and current sentence
     tokenizer.add_special_tokens({"sep_token":"</t>"})
-    #tokenizer.add_special_tokens({"sep1_token":"</t1>"})
 
     # Add contextual special tokens
     special_tokens = []
@@ -111,7 +111,7 @@ def pred_prob_dist(model_type):
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}short_test.json"}
+    data_files = {"test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -140,34 +140,59 @@ def pred_prob_dist(model_type):
         )
   
     model.eval()
-    predictions = trainer.predict(tokenized_datasets["test"])
-    prob_dist = predictions[0] # The second element of the predictions are hidden states
-    
-    
-    print ("prob_dist.shape", prob_dist.shape)
-    return prob_dist
+    gold_labels = tokenized_datasets["test"]["labels"]
 
-    #print (predictions.predictions)
-    #for preds in predictions.predictions:
-        #print ("preds:", preds)
-        #print ("preds_shape:", preds.shape)
-        #for pred in preds:
-            #print ("inside preds", pred[:3])
-            #print ("inside_preds_shape", pred.shape)
-        
+    preds, label_ids, metrics = trainer.predict(tokenized_datasets["test"])
+    prob_dist = preds[0] # The second element of the predictions are hidden states
+
+    print ("prob_dist", prob_dist)
+    print ("shape", prob_dist.shape)
+    # prob_dist : batch * seqlen * vocab 
+    return gold_labels, prob_dist
+
+def batch_sent_scores(gold_labels, prob_dist): 
+    # Skip token 1 ()
+    # all_prob_dist : B x S x V 
+    # gold_word_ids : B x S
+    
+    softmax = nn.LogSoftmax(dim=-1)
+    prob_dist = softmax(torch.from_numpy(prob_dist))
+    batch_sent_scores = [] # B x S
+    batch_size = prob_dist.shape[0] # slice to make it integer from tuple
+    print ("batch_size", batch_size)
+    for i in range(batch_size):
+        scores = [] # S
+        print (i)
+        seq_len = prob_dist.shape[1]
+        print ("seq_len", seq_len)
+        for j in range(seq_len):
+            # get probability of gold word
+            gold_word_id = np.array(gold_labels)[i, j]
+            print (j)
+            if gold_word_id != 1: # pad token 
+            #scores.append(argmax(all_prob_dist[i, j, :]))
+                scores.append(prob_dist[i, j, gold_word_id])
+            
+        sentence_scores = sum(scores)
+        batch_sent_scores.append(sentence_scores)
+    return batch_sent_scores # B x S
 
 def cxmi():
-    base_prob_dist = pred_prob_dist(model_type="base")
-    context_prob_dist = pred_prob_dist(model_type="context")
+    # base_prob_list : batch_size 
+    gold_labels, base_prob_dist = pred_prob_dist(model_type="base")
+    gpld_labels, context_prob_dist = pred_prob_dist(model_type="context")
 
-    cxmi = context_prob_dist - base_prob_dist
+    base_batch_sent_scores = batch_sent_scores(gold_labels, base_prob_dist)
+    context_batch_sent_scores = batch_sent_scores(gold_labels, context_prob_dist)
 
+    cxmi = - (np.mean(np.array(base_batch_sent_scores) - np.array(context_batch_sent_scores)))
+    
     return cxmi
 
 def main():
-    score = cxmi()
-    print ("cxmi shape", score.shape)
-    print (f"CXMI: {np.mean(score):.05f}")
+    cxmi_score = cxmi()
+    #print ("cxmi shape", cxmi_score.shape)
+    print (f"CXMI: {cxmi_score}")
     
 if __name__ == "__main__":
     main()
