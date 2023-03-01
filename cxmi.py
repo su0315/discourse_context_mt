@@ -12,10 +12,12 @@ from datasets import load_dataset, concatenate_datasets
 from functools import partial
 from jsonargparse import (ActionConfigFile, ArgumentParser, Namespace,
                           namespace_to_dict)
-from datasets import disable_caching
+from datasets import disable_caching, Dataset
 disable_caching()
 import torch
 from torch import nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 
 def read_arguments() -> ArgumentParser:
     parser = ArgumentParser(description="Command for training models.")
@@ -111,7 +113,7 @@ def pred_prob_dist(model_type):
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}test.json"}
+    data_files = {"test": f"{file_path}short_test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -140,36 +142,52 @@ def pred_prob_dist(model_type):
         )
   
     model.eval()
-    gold_labels = tokenized_datasets["test"]["labels"]
+    test_data = tokenized_datasets["test"]
+    gold_labels = test_data["labels"]
 
+    # Make test data into numpy from list
+    #ds = Dataset.from_dict({"test": test_data})
+    torch_ds = test_data.with_format("torch")
+
+    test_loader = DataLoader(torch_ds, batch_size=4, shuffle=False)
+    preds, _, _ = trainer.prediction_loop(test_loader, description="prediction")
+    
+    """
     preds, label_ids, metrics = trainer.predict(tokenized_datasets["test"])
+    """
     prob_dist = preds[0] # The second element of the predictions are hidden states
 
+    print (type(prob_dist))
     print ("prob_dist", prob_dist)
+
     print ("shape", prob_dist.shape)
     # prob_dist : batch * seqlen * vocab 
     return gold_labels, prob_dist
 
 def batch_sent_scores(gold_labels, prob_dist): 
     # Skip token 1 ()
-    # all_prob_dist : B x S x V 
+    # prob_dist : B x S x V 
     # gold_word_ids : B x S
     
+    #softmax = nn.Softmax(dim=-1)
     softmax = nn.LogSoftmax(dim=-1)
+    #prob_dist = F.log_softmax(torch.from_numpy(prob_dist), dim=-1)
     prob_dist = softmax(torch.from_numpy(prob_dist))
     batch_sent_scores = [] # B x S
     batch_size = prob_dist.shape[0] # slice to make it integer from tuple
     print ("batch_size", batch_size)
     for i in range(batch_size):
         scores = [] # S
-        print (i)
+        #print (i)
         seq_len = prob_dist.shape[1]
         print ("seq_len", seq_len)
         for j in range(seq_len):
             # get probability of gold word
             gold_word_id = np.array(gold_labels)[i, j]
-            print (j)
-            if gold_word_id != 1: # pad token 
+            #print (j)
+            if gold_word_id <= len(gold_labels[i]):
+                print (len(gold_labels[i]))
+            #if gold_word_id != 1: # pad token 
             #scores.append(argmax(all_prob_dist[i, j, :]))
                 scores.append(prob_dist[i, j, gold_word_id])
             
