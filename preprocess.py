@@ -25,8 +25,8 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
 
     # Iterate over every documents
     for doc_idx, doc in enumerate(data["conversation"]):
-        doc_input = [sent['en_sentence'] for sent in doc] 
-        doc_target = [sent['ja_sentence'] for sent in doc]
+        doc_input = [sent[f'{src_lang}_sentence'] for sent in doc] 
+        doc_target = [sent[f'{tgt_lang}_sentence'] for sent in doc]
 
         if speaker:
             src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
