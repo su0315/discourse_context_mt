@@ -113,7 +113,7 @@ def pred_prob_dist(model_type):
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}short_test.json"}
+    data_files = {"test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -146,64 +146,63 @@ def pred_prob_dist(model_type):
     gold_labels = test_data["labels"]
 
     # Make test data into numpy from list
-    #ds = Dataset.from_dict({"test": test_data})
+    """
     torch_ds = test_data.with_format("torch")
-
-    test_loader = DataLoader(torch_ds, batch_size=4, shuffle=False)
+    test_loader = DataLoader(torch_ds, batch_size=16, shuffle=False)
     preds, _, _ = trainer.prediction_loop(test_loader, description="prediction")
     
     """
     preds, label_ids, metrics = trainer.predict(tokenized_datasets["test"])
-    """
+    
     prob_dist = preds[0] # The second element of the predictions are hidden states
 
     print (type(prob_dist))
     print ("prob_dist", prob_dist)
 
     print ("shape", prob_dist.shape)
-    # prob_dist : batch * seqlen * vocab 
+    # prob_dist : num_sent * seqlen * vocab 
     return gold_labels, prob_dist
 
-def batch_sent_scores(gold_labels, prob_dist): 
+def sent_scores(gold_labels, prob_dist): 
     # Skip token 1 ()
-    # prob_dist : B x S x V 
-    # gold_word_ids : B x S
+    # prob_dist : Instance x S x V 
+    # gold_word_ids : Instance x S
     
     #softmax = nn.Softmax(dim=-1)
     softmax = nn.LogSoftmax(dim=-1)
     #prob_dist = F.log_softmax(torch.from_numpy(prob_dist), dim=-1)
     prob_dist = softmax(torch.from_numpy(prob_dist))
-    batch_sent_scores = [] # B x S
-    batch_size = prob_dist.shape[0] # slice to make it integer from tuple
-    print ("batch_size", batch_size)
-    for i in range(batch_size):
+    all_sent_scores = [] # B x S
+    num_sents = prob_dist.shape[0] # slice to make it integer from tuple
+    print ("Num of Instances", num_sents)
+    for i in range(num_sents):
         scores = [] # S
         #print (i)
         seq_len = prob_dist.shape[1]
-        print ("seq_len", seq_len)
+        #print ("seq_len", seq_len)
         for j in range(seq_len):
             # get probability of gold word
             gold_word_id = np.array(gold_labels)[i, j]
             #print (j)
-            if gold_word_id <= len(gold_labels[i]):
-                print (len(gold_labels[i]))
-            #if gold_word_id != 1: # pad token 
+            #if gold_word_id <= len(gold_labels[i]):
+                #print (len(gold_labels[i]))
+            if gold_word_id != 1: # pad token 
             #scores.append(argmax(all_prob_dist[i, j, :]))
                 scores.append(prob_dist[i, j, gold_word_id])
             
-        sentence_scores = sum(scores)
-        batch_sent_scores.append(sentence_scores)
-    return batch_sent_scores # B x S
+        sent_scores = sum(scores)
+        all_sent_scores.append(sent_scores)
+    return all_sent_scores # B x S
 
 def cxmi():
-    # base_prob_list : batch_size 
+    # base_prob_list : sent_size 
     gold_labels, base_prob_dist = pred_prob_dist(model_type="base")
     gpld_labels, context_prob_dist = pred_prob_dist(model_type="context")
 
-    base_batch_sent_scores = batch_sent_scores(gold_labels, base_prob_dist)
-    context_batch_sent_scores = batch_sent_scores(gold_labels, context_prob_dist)
+    base_sent_scores = sent_scores(gold_labels, base_prob_dist)
+    context_sent_scores = sent_scores(gold_labels, context_prob_dist)
 
-    cxmi = - (np.mean(np.array(base_batch_sent_scores) - np.array(context_batch_sent_scores)))
+    cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
     
     return cxmi
 
