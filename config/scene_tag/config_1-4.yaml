@@ -12,10 +12,10 @@ generic:
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/1-4 # Modify here
+  output_dir: ./results/bsd_en-ja/1-4_scene # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/1-4                      
+  logging_dir: ./logs/bsd_en-ja/1-4_scene                      
   per_device_train_batch_size: 4 #16  
   per_device_eval_batch_size: 4  #64 # 16
   warmup_steps: 500                
@@ -41,7 +41,7 @@ training_args:
   save_steps: 5000 ##################################################################################
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  eval_accumulation_steps: 10
+  #eval_accumulation_steps: 10
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback

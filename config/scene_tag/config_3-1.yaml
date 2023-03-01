@@ -13,12 +13,12 @@ generic:
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/3-1 # Modify here
+  output_dir: ./results/bsd_en-ja/3-1_scene # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/3-1                   
+  logging_dir: ./logs/bsd_en-ja/3-1_scene                   
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 16  #64 
+  per_device_eval_batch_size: 4  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3

@@ -14,12 +14,12 @@ generic:
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/5-5_dropout # Modify here
+  output_dir: ./results/bsd_en-ja/5-5_dropout_scene # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/5-5_dropout                  
+  logging_dir: ./logs/bsd_en-ja/5-5_dropout_scene                  
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 64  #64 
+  per_device_eval_batch_size: 4  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3
@@ -30,7 +30,7 @@ training_args:
   do_predict: True
   metric_for_best_model: comet # eval_bleu.metric,
   load_best_model_at_end: True
-  num_train_epochs: 5
+  num_train_epochs: 10
   greater_is_better: True
   predict_with_generate: True
   do_train: True
@@ -46,4 +46,4 @@ training_args:
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback
-  early_stopping_patience: 3
+  early_stopping_patience: 5
