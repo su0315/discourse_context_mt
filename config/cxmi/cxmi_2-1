@@ -13,6 +13,7 @@ generic:
   speaker: False
   random_context: False
   tag: False
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-1/checkpoint-10000
   
 
 training_args:
@@ -36,7 +37,7 @@ training_args:
   num_train_epochs: 5
   greater_is_better: True
   predict_with_generate: False
-  do_train: False
+  do_train: True
   logging_strategy: steps
   save_strategy: steps
   logging_steps: 1000
@@ -46,7 +47,7 @@ training_args:
   save_steps: 5000
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  eval_accumulation_steps: 20
+  eval_accumulation_steps: 15 #10
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback

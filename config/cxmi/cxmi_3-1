@@ -3,25 +3,25 @@ generic:
   src_lang: en
   tgt_lang: ja
   base_src_context: 0
-  context_src_context: 0
+  context_src_context: 2
   base_tgt_context: 0
-  context_tgt_context: 1
+  context_tgt_context: 0
   base_dropout: 0.0
   context_dropout: 0.0
   base_tgt_sep: False
-  context_tgt_sep: True
+  context_tgt_sep: False
   speaker: False
   random_context: False
   tag: False
-  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_1-5/checkpoint-5000
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-1/checkpoint-10000
   
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/cxmi_1-2   # Modify here
+  output_dir: ./results/bsd_en-ja/cxmi_3-1   # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/cxmi_1-2               
+  logging_dir: ./logs/bsd_en-ja/cxmi_3-1               
   per_device_train_batch_size: 4 #16  
   per_device_eval_batch_size: 4  #64 
   warmup_steps: 500                
@@ -47,7 +47,7 @@ training_args:
   save_steps: 5000
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  eval_accumulation_steps: 15
+  eval_accumulation_steps: 10
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback
