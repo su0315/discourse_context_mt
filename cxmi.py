@@ -36,12 +36,11 @@ def read_arguments() -> ArgumentParser:
     parser.add_argument("--generic.random_context", type=bool, default=False)
     parser.add_argument("--generic.tag", type=bool, default=False)
     parser.add_argument("--generic.cxmi", type=bool, default=True)
-    #parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ") 
     parser.add_argument("--generic.context_src_context",type=int, default="src", help="the number of the target context sentence for each input")
     parser.add_argument("--generic.context_tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
     parser.add_argument("--generic.context_dropout", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
     parser.add_argument("--generic.context_tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
-    
+    parser.add_argument("--generic.checkpoint", required=True, metavar="FILE", help="path to best checkpoing for cxmi ") 
     return parser
 
 def initialize_trainer(configs) -> TrainingArguments:
@@ -78,10 +77,17 @@ def pred_prob_dist(model_type):
     random_context = cfg.generic.random_context
     output_dir = cfg.training_args.output_dir
     tag = cfg.generic.tag
-    #checkpoint = cfg.generic.checkpoint
+    model_checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
-    model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-5_max_128/checkpoint-5000"
+    #### Choose One#######
+    # For Src model
+    #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-1/checkpoint-10000"
+    
+    # For Tgt model 
+
+    # For Src and Tgt model
+    #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-5_max_128/checkpoint-5000"
     #configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
