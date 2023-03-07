@@ -8,7 +8,7 @@ generic:
   tgt_sep: True
   speaker: False
   random_context: False
-  tag: True
+  tag: False
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments

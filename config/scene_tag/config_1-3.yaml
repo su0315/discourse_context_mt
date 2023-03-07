@@ -42,7 +42,7 @@ training_args:
   save_steps: 5000 ##################################################################################
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  #eval_accumulation_steps: 10
+  eval_accumulation_steps: 10
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback

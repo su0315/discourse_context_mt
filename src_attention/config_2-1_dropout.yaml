@@ -2,24 +2,23 @@ generic:
   dataset: /home/sumire/discourse_context_mt/data/BSD-master/
   src_lang: en
   tgt_lang: ja
-  src_context: 4
-  tgt_context: 4
-  dropout: 0.0
-  tgt_sep: True
+  src_context: 1
+  tgt_context: 0
+  dropout: 0.2
+  tgt_sep: False
   speaker: False
   random_context: False
-  tag: True
-
+  tag: False
   
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/5-5 # Modify here
+  output_dir: ./results/bsd_en-ja/src_attention/2-1-t_dropout # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/5-5          
+  logging_dir: ./logs/bsd_en-ja/src_attention/2-1-t_dropout                     
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 64  #64 
+  per_device_eval_batch_size: 4  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3
@@ -43,7 +42,7 @@ training_args:
   save_steps: 5000
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  eval_accumulation_steps: 10
+  eval_accumulation_steps: 20
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback
