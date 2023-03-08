@@ -28,15 +28,20 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         doc_input = [sent['en_sentence'] for sent in doc] 
         doc_target = [sent['ja_sentence'] for sent in doc]
 
-        if speaker:
-            src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
+        
+        src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
         
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
         new_doc_input = []
         new_src_context = []
         for idx, ip in enumerate (doc_input):
+        # Randomely decide True or False for CXMI random speaker model
+            if random_context:
+                speaker = bool(random.getrandbits(1))
+                print ("random_speaker", idx, speaker)
             if speaker: 
+                print ("idx", idx)
                 current_speaker = src_speakers[idx]
                 #print ("current_speaker", current_speaker)
 
@@ -114,7 +119,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         # Target side
         new_doc_target = []
         # Separate context and current sentences per doc
-        new_doc_context = [] 
+        new_doc_context =[] 
 
         for idx, tgt in enumerate (doc_target):
             target_context_size = tgt_context_size

@@ -57,6 +57,7 @@ def pred_prob_dist(model_type):
     parser = read_arguments()
      
     cfg = parser.parse_args()
+    print(cfg)
 
     if model_type == "base":
         src_context_size = cfg.generic.base_src_context
@@ -79,15 +80,6 @@ def pred_prob_dist(model_type):
     tag = cfg.generic.tag
     model_checkpoint = cfg.generic.checkpoint
 
-    # Model for CXMI
-    #### Choose One#######
-    # For Src model
-    #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-1/checkpoint-10000"
-    
-    # For Tgt model 
-
-    # For Src and Tgt model
-    #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-5_max_128/checkpoint-5000"
     #configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
@@ -183,7 +175,7 @@ def sent_scores(gold_labels, prob_dist):
     print ("Num of Instances", num_sents)
     for i in range(num_sents):
         scores = [] # S
-        #print (i)
+        print ("num_sents", i)
         seq_len = prob_dist.shape[1]
         #print ("seq_len", seq_len)
         for j in range(seq_len):
