@@ -40,6 +40,10 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
             if random_context:
                 speaker = bool(random.getrandbits(1))
                 print ("random_speaker", idx, speaker)
+                
+                tag = bool(random.getrandbits(1))
+                print ("random_scene_tag", idx, tag)
+
             if speaker: 
                 print ("idx", idx)
                 current_speaker = src_speakers[idx]
@@ -50,6 +54,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                 #randoms.append(src_context_size)
             
             if src_context_size == 0:
+
                 if tag:
                     #print (f"{scene_tags[doc_idx]}{ip}")
                     new_doc_input.append(f"{scene_tags[doc_idx]}{ip}")
