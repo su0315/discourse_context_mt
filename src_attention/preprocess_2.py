@@ -29,7 +29,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         doc_target = [sent['ja_sentence'] for sent in doc]
 
         
-        src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc] 
+        src_speakers =  [sent[f'{src_lang}_speaker'] for sent in doc]
         
         # Concatenate contexts given any context_size both in src and tgt
         # Source side
@@ -37,10 +37,11 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         new_src_context = []
         for idx, ip in enumerate (doc_input):
         # Randomely decide True or False for CXMI random speaker model
-            if random_context:
+            if speaker and  random_context:
                 speaker = bool(random.getrandbits(1))
                 print ("random_speaker", idx, speaker)
                 
+            if tag and random_context:
                 tag = bool(random.getrandbits(1))
                 print ("random_scene_tag", idx, tag)
 
@@ -49,7 +50,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                 current_speaker = src_speakers[idx]
                 #print ("current_speaker", current_speaker)
 
-            if random_context:
+            if src_context_size > 0 and random_context:
                 src_context_size = random.randint(0, src_context_size) 
                 #randoms.append(src_context_size)
             
@@ -129,7 +130,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         for idx, tgt in enumerate (doc_target):
             target_context_size = tgt_context_size
 
-            if random_context:
+            if tgt_context_size>0 and random_context:
                 target_context_size = random.randint(0, tgt_context_size)
                 
             if target_context_size == 0:
@@ -226,10 +227,10 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         context_attn = context_out['attention_mask'] ### SU
         
         # Add tokenized context information on model_inputs
-        model_inputs['tgt_context_ids']=context_ids
+        #model_inputs['tgt_context_ids']=context_ids
         #print ("model_inputs['context_ids']", model_inputs['context_ids'][10:20])
-        model_inputs['tgt_context_attention_mask']=context_attn
-        #print ("model_inputs['context_attention_mask']", model_inputs['context_attention_mask'][:5])
+        #model_inputs['tgt_context_attention_mask']=context_attn
+        #[print ("model_inputs['context_attention_mask']", model_inputs['context_attention_mask'][:5])
         #print ("model_inputs['input_ids']", model_inputs["input_ids"][:5])
 
         #print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=True))
@@ -248,8 +249,8 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-    # print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10], skip_special_tokens=False))
-    # print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:10], skip_special_tokens=False))
+    print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10], skip_special_tokens=True))
+    print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:10], skip_special_tokens=True))
     # print(len(model_inputs['labels']))
     # print(len(model_inputs['input_ids']))
     # print(len(model_inputs['attention_mask']))

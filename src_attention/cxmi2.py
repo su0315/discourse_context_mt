@@ -32,9 +32,11 @@ def read_arguments() -> ArgumentParser:
     parser.add_argument("--generic.base_tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
     parser.add_argument("--generic.base_dropout", type=float, choices=np.arange(0.0, 1.0, 0.1), default=0, help="the coword dropout rate")
     parser.add_argument("--generic.base_tgt_sep", type=bool, default=False)# SU: changed default = True since error: pyarrow.lib.ArrowInvalid: Column 3 named context_ids expected length 70 but got length 1
-    parser.add_argument("--generic.speaker", type=bool, default=False)
+    parser.add_argument("--generic.base_speaker", type=bool, default=False)
+    parser.add_argument("--generic.context_speaker", type=bool, default=False)
     parser.add_argument("--generic.random_context", type=bool, default=False)
-    parser.add_argument("--generic.tag", type=bool, default=False)
+    parser.add_argument("--generic.base_tag", type=bool, default=False)
+    parser.add_argument("--generic.context_tag", type=bool, default=False)
     parser.add_argument("--generic.cxmi", type=bool, default=True)
     parser.add_argument("--generic.context_src_context",type=int, default="src", help="the number of the target context sentence for each input")
     parser.add_argument("--generic.context_tgt_context", type=int, default=0, help="the number of the source context sentence for each input")
@@ -64,20 +66,24 @@ def pred_prob_dist(model_type):
         tgt_context_size = cfg.generic.base_tgt_context
         cw_dropout_rate = cfg.generic.base_dropout
         tgt_sep = cfg.generic.base_tgt_sep
+        tag = cfg.generic.base_tag
+        speaker = cfg.generic.base_speaker
 
     elif model_type == "context":
         src_context_size = cfg.generic.context_src_context
         tgt_context_size = cfg.generic.context_tgt_context
         cw_dropout_rate = cfg.generic.context_dropout
         tgt_sep = cfg.generic.context_tgt_sep
+        tag = cfg.generic.context_tag
+        speaker = cfg.generic.context_speaker
 
     src_lang = cfg.generic.src_lang
     tgt_lang = cfg.generic.tgt_lang
     file_path = cfg.generic.dataset
-    speaker = cfg.generic.speaker
+    #speaker = cfg.generic.speaker
     random_context = cfg.generic.random_context
     output_dir = cfg.training_args.output_dir
-    tag = cfg.generic.tag
+    #tag = cfg.generic.tag
     model_checkpoint = cfg.generic.checkpoint
 
     # Model for CXMI
