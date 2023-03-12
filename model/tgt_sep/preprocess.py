@@ -173,7 +173,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
             new_inputs, text_target=new_targets, truncation=False, padding = True )
     """
     # Tokenize context indipendently
-    if tgt_context_size>0: 
+    if tgt_context_size>0 or random_context: 
         #print ("new_tgt_contexts", new_tgt_contexts[:5])#SU
         
         context_out  = tokenizer(new_tgt_contexts,  truncation=True,  max_length=max_length, padding = "max_length" ) ### SU　"max_length", truncation_side="left", max_length=max_length,
