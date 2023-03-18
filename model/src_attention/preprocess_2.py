@@ -38,50 +38,57 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         new_src_context = []
         for idx, ip in enumerate (doc_input):
         # Randomely decide True or False for CXMI random speaker model
-            if speaker and  random_context:
-                speaker = bool(random.getrandbits(1))
-                print ("random_speaker", idx, speaker)
+            if speaker and random_context:
+                spk = bool(random.getrandbits(1))
+                print ("random_speaker", idx, spk)
+            else: 
+                spk = speaker
                 
             if tag and random_context:
-                tag = bool(random.getrandbits(1))
-                print ("random_scene_tag", idx, tag)
+                tg = bool(random.getrandbits(1))
+                print ("random_scene_tag", idx, tg)
+            else:
+                tg = tag
 
-            if speaker: 
-                print ("idx", idx)
+            if spk: 
+                #print ("idx", idx)
                 current_speaker = src_speakers[idx]
-                #print ("current_speaker", current_speaker)
-
-            if src_context_size > 0 and random_context:
-                src_context_size = random.randint(0, src_context_size) 
+                
+            if src_context_size > 0 and random_context and spk == False:
+                source_context_size = random.randint(0, src_context_size) 
                 #print ("src_context_size", source_context_size)
-            
-            if src_context_size == 0:
+            else:
+                source_context_size = src_context_size
+
+            if source_context_size == 0:
                 new_src_contexts.append('</t>') 
-                if tag:
-                    #print (f"{scene_tags[doc_idx]}{ip}")
-                    new_doc_input.append(f"{scene_tags[doc_idx]}{ip}")
+                if tg:
                     
+                    new_doc_input.append(f"{scene_tags[doc_idx]}{ip}")
+                
                 else:    
                     new_doc_input.append(ip)
+                
     
             else:    
                 context_list = []  
                 # Check each context index given the context size and current input index
-                for context_window in range(src_context_size, 0, -1):
+                for context_window in range(source_context_size, 0, -1):
                     context_idx = idx - context_window
                     
                     # If context idx is not the left side of the beggining of the doc_inputs
                     if context_idx >= 0:
                         context_sent = doc_input[context_idx]
-                        if speaker:
+                        if spk:
                             context_speaker = src_speakers[context_idx]
+                            #print ("context_speaker", context_speaker)
                             if context_speaker != current_speaker:
                                 context_sent = f"<DiffSpeak>{context_sent}"
-                                #print ("concat_speaker", concat_speaker)
+                                print ("context_diffS_sent", context_sent)
                                 
                             else:
                                 context_sent = f"<CurrSpeak>{context_sent}"
-                                #print ("concat_speaker", concat_speaker)
+                                print ("context_currS_sent", context_sent)
                         
                         #Store the context in a list
                         context_list.append(context_sent)
@@ -90,13 +97,13 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                     
                 if len(context_list) ==0:
                     sent = ip
-                    if speaker or tag:
-                        if not tag:
+                    if spk or tg:
+                        if not tg:
                             sent = f"<CurrSpeak>{sent}"
                         #print ("concat_speaker2:", concat_speaker)
-                        if not speaker:
+                        if not spk:
                             sent = f"{scene_tags[doc_idx]}{sent}"
-                        if tag and speaker:
+                        if tg and spk:
                             sent = f"{scene_tags[doc_idx]}<CurrSpeak>{sent}"
                         
                     new_doc_input.append(sent)
@@ -104,14 +111,14 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                 else:
                     concat_contexts = "</t>".join(context_list)
                     sent = ip
-                    if speaker or tag:
-                        if not tag:
+                    if spk or tg:
+                        if not tg:
                             sent = f"<CurrSpeak>{sent}"
                             #new_input = "</t>".join([concat_contexts,sent])
-                        if not speaker:
+                        if not spk:
                             concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
                             #new_input = "</t>".join([concat_contexts,sent])
-                        if tag and speaker:
+                        if tg and spk:
                             concat_contexts = f"{scene_tags[doc_idx]}{concat_contexts}"
                             sent = f"<CurrSpeak>{sent}"
                     ### CZ: separate context
@@ -119,6 +126,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                     new_src_contexts.append(concat_contexts+'</t>')
                     #new_input = "</t>".join([concat_contexts,sent])
                     new_doc_input.append(new_input)
+        #print ("new_doc_input", new_doc_input)
                     
         #print ("randoms:", randoms)   
         new_inputs.append(new_doc_input)
@@ -182,7 +190,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
             new_inputs, text_target=new_targets, truncation=True,  max_length=max_length, padding = "max_length" ) # "max_length", truncation_side="left" #max_length=max_length,
     """
     # Old Setting Without Max length 
-    # model_inputs = tokenizer(
+    # model_inputs = tokenizer(p
             new_inputs, text_target=new_targets, truncation=False, padding = True )
     """
     # print(len(model_inputs['labels']))
@@ -195,7 +203,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         src_context_attn = src_context_out['attention_mask'] ### SU
         model_inputs['src_context_ids']=src_context_ids
         model_inputs['src_context_attention_mask']=src_context_attn
-        #print(model_inputs['input_ids'],'model_inputs1')
+        #print(tokenizer.batch_decode(model_inputs['input_ids'][:30], skip_special_tokens=False),'model_inputs1')
         new_input_ids = []
         for c,i in zip(src_context_ids,model_inputs['input_ids']):
             # print(c,'context')
@@ -203,7 +211,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
             c.extend(i)
             new_input_ids.append(c)
         model_inputs['input_ids']=new_input_ids
-        #print(model_inputs['input_ids'],'model_inputs1')
+        #print(tokenizer.batch_decode(model_inputs['input_ids'][:30], skip_special_tokens=False),'model_inputs2')
         new_attentions = []
         new_src_attentions = []
         for c,i in zip(src_context_attn,model_inputs['attention_mask']):
@@ -250,8 +258,8 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                 for m in to_be_masked:
                     model_inputs['input_ids'][i][m] = tokenizer.mask_token_id
 
-    print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:10], skip_special_tokens=True))
-    print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:10], skip_special_tokens=True))
+    print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:5], skip_special_tokens=False))
+    print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:5], skip_special_tokens=True))
     # print(len(model_inputs['labels']))
     # print(len(model_inputs['input_ids']))
     # print(len(model_inputs['attention_mask']))
