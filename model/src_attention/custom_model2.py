@@ -288,16 +288,16 @@ class MBartModelC(MBartModel):
             )
             if src_context_ids is not None:# SU
                 srcl = src_context_ids.shape[1]
-            # print(attention_mask[0])
-            # print('src_ctx', src_context_ids.shape)
-            # print(src_context_ids[0])
-            encoder_outputs_ = encoder_outputs[0]
-            # print('encout shape', len(encoder_outputs))
-            # print('encout shape', encoder_outputs_.shape)
-            nout = encoder_outputs_
-            # print(nout.shape)
-            attention_mask = src_context_attention_mask
-            print(src_context_attention_mask)
+                # print(attention_mask[0])
+                # print('src_ctx', src_context_ids.shape)
+                # print(src_context_ids[0])
+                encoder_outputs_ = encoder_outputs[0]
+                # print('encout shape', len(encoder_outputs))
+                # print('encout shape', encoder_outputs_.shape)
+                nout = encoder_outputs_
+                # print(nout.shape)
+                attention_mask = src_context_attention_mask
+                print(src_context_attention_mask)
             #encoder_outputs= nout
         # If the user passed a tuple for encoder_outputs, we wrap it in a BaseModelOutput when return_dict=True
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
