@@ -126,7 +126,7 @@ def pred_prob_dist(model_type):
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}test.json"}
+    data_files = {"test": f"{file_path}test_cxmi1.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -205,24 +205,27 @@ def sent_scores(gold_labels, prob_dist):
             
         sent_scores = sum(scores)
         all_sent_scores.append(sent_scores)
-    return all_sent_scores # B x S
+    return all_sent_scores, num_sents # B x S
 
 def cxmi():
     # base_prob_list : sent_size 
     gold_labels, base_prob_dist = pred_prob_dist(model_type="base")
     gpld_labels, context_prob_dist = pred_prob_dist(model_type="context")
 
-    base_sent_scores = sent_scores(gold_labels, base_prob_dist)
-    context_sent_scores = sent_scores(gold_labels, context_prob_dist)
+    base_sent_scores, base_num_sents = sent_scores(gold_labels, base_prob_dist)
+    context_sent_scores, context_num_sents = sent_scores(gold_labels, context_prob_dist)
 
+    
     cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
     
-    return cxmi
+    return cxmi, base_num_sents, context_num_sents
 
 def main():
-    cxmi_score = cxmi()
+    cxmi_score, base_num_sents, context_num_sents = cxmi()
+
     #print ("cxmi shape", cxmi_score.shape)
     print (f"CXMI: {cxmi_score}")
+    print (f"number of context model sentences:  {context_num_sents}", f"number of base model sentences:  {base_num_sents}")
     
 if __name__ == "__main__":
     main()
