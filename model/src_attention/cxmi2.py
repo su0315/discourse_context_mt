@@ -94,7 +94,6 @@ def pred_prob_dist(model_type):
     # For Tgt model 
 
     # For Src and Tgt model
-    #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/cxmi/random_5-5_max_128/checkpoint-5000"
     #configuration = MBartConfig
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
     model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
@@ -121,12 +120,14 @@ def pred_prob_dist(model_type):
     special_tokens_dict = {'additional_special_tokens': special_tokens}
     tokenizer.add_special_tokens(special_tokens_dict)
 
+    honorifics = ["ござい", "ます", "いらっしゃれ", "いらっしゃい", "ご覧", "伺い", "伺っ", "存知", "です", "まし"]
+    hon_id = tokenizer.encode(honorifics)
     #print ("speacial_tokens_dict", special_tokens_dict)
     model.resize_token_embeddings(len(tokenizer))
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}test_cxmi1.json"}
+    data_files = {"test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -174,9 +175,9 @@ def pred_prob_dist(model_type):
 
     print ("shape", prob_dist.shape)
     # prob_dist : num_sent * seqlen * vocab 
-    return gold_labels, prob_dist
+    return gold_labels, prob_dist, hon_id
 
-def sent_scores(gold_labels, prob_dist): 
+def sent_scores(gold_labels, prob_dist, hon_id): 
     # Skip token 1 ()
     # prob_dist : Instance x S x V 
     # gold_word_ids : Instance x S
@@ -186,46 +187,57 @@ def sent_scores(gold_labels, prob_dist):
     #prob_dist = F.log_softmax(torch.from_numpy(prob_dist), dim=-1)
     prob_dist = softmax(torch.from_numpy(prob_dist))
     all_sent_scores = [] # B x S
+    all_hon_scores = []
+    
     num_sents = prob_dist.shape[0] # slice to make it integer from tuple
     print ("Num of Instances", num_sents)
     for i in range(num_sents):
         scores = [] # S
+        hon_scores = []
         print ("num_sents", i)
         seq_len = prob_dist.shape[1]
         #print ("seq_len", seq_len)
         for j in range(seq_len):
             # get probability of gold word
             gold_word_id = np.array(gold_labels)[i, j]
+            
+            if gold_word_id in hon_id:
+                hon_gold_id = np.array(gold_labels)[i, j]
+                hon_scores.append(prob_dist[i, j, hon_gold_id])
             #print (j)
             #if gold_word_id <= len(gold_labels[i]):
                 #print (len(gold_labels[i]))
             if gold_word_id != 1: # pad token 
             #scores.append(argmax(all_prob_dist[i, j, :]))
                 scores.append(prob_dist[i, j, gold_word_id])
-            
+        hon_sent_scores = sum(hon_scores)
         sent_scores = sum(scores)
+
+        all_hon_scores.append(hon_sent_scores)
         all_sent_scores.append(sent_scores)
-    return all_sent_scores, num_sents # B x S
+        
+    return all_sent_scores, num_sents, all_hon_scores # B x S
 
 def cxmi():
     # base_prob_list : sent_size 
-    gold_labels, base_prob_dist = pred_prob_dist(model_type="base")
-    gpld_labels, context_prob_dist = pred_prob_dist(model_type="context")
+    gold_labels, base_prob_dist, hon_id = pred_prob_dist(model_type="base")
+    gpld_labels, context_prob_dist, hon_id = pred_prob_dist(model_type="context")
 
-    base_sent_scores, base_num_sents = sent_scores(gold_labels, base_prob_dist)
-    context_sent_scores, context_num_sents = sent_scores(gold_labels, context_prob_dist)
+    base_sent_scores, base_num_sents, base_hon_scores = sent_scores(gold_labels, base_prob_dist, hon_id)
+    context_sent_scores, context_num_sents, context_hon_scores = sent_scores(gold_labels, context_prob_dist, hon_id)
 
     
     cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
+    hon_cxmi = - (np.mean(np.array(base_hon_scores) - np.array(context_hon_scores)))
     
-    return cxmi, base_num_sents, context_num_sents
+    return cxmi, base_num_sents, context_num_sents, hon_cxmi
 
 def main():
-    cxmi_score, base_num_sents, context_num_sents = cxmi()
+    cxmi_score, base_num_sents, context_num_sents, hon_cxmi_score = cxmi()
 
     #print ("cxmi shape", cxmi_score.shape)
     print (f"CXMI: {cxmi_score}")
     print (f"number of context model sentences:  {context_num_sents}", f"number of base model sentences:  {base_num_sents}")
-    
+    print (f"Honorific CXMI: {hon_cxmi_score}")
 if __name__ == "__main__":
     main()
