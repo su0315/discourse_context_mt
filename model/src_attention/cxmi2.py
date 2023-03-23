@@ -120,14 +120,18 @@ def pred_prob_dist(model_type):
     special_tokens_dict = {'additional_special_tokens': special_tokens}
     tokenizer.add_special_tokens(special_tokens_dict)
 
-    honorifics = ["ござい", "ます", "いらっしゃれ", "いらっしゃい", "ご覧", "伺い", "伺っ", "存知", "です", "まし"]
-    hon_id = tokenizer.encode(honorifics)
+    #honorifics = ["ござい", "ます", "いらっしゃれ", "いらっしゃい", "ご覧", "伺い", "伺っ", "存知", "です", "まし"]
+    #hon_id = tokenizer.encode(honorifics)
+    hon_id = tokenizer.encode(["です", "でした", "ます", "ました","ません","ましょう","でしょう","ください","ございます","おります", "致します", "ご覧", "なります", "伺", "頂く", "頂き", "頂いて", "下さい", "申し上げます"])
+    #hon_id.remove(tokenizer.lang_code_to_id["ja_XX"])
+    hon_id.remove(tokenizer.eos_token_id)
+    print (tokenizer.decode(hon_id))
     #print ("speacial_tokens_dict", special_tokens_dict)
     model.resize_token_embeddings(len(tokenizer))
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}test.json"}
+    data_files = {"test": f"{file_path}test_cxmi1.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
@@ -183,7 +187,7 @@ def pred_prob_dist(model_type):
          for translation in decoded_preds:
             wf.write(translation.strip()+'\n') 
 
-    return gold_labels, prob_dist, hon_id, output_dir
+    return gold_labels, prob_dist, hon_id, output_dir, tokenizer
 
 def sent_scores(gold_labels, prob_dist, hon_id): 
     # Skip token 1 ()
@@ -199,6 +203,7 @@ def sent_scores(gold_labels, prob_dist, hon_id):
     
     num_sents = prob_dist.shape[0] # slice to make it integer from tuple
     print ("Num of Instances", num_sents)
+    hon_id_list = []
     for i in range(num_sents):
         scores = [] # S
         hon_scores = []
@@ -211,7 +216,9 @@ def sent_scores(gold_labels, prob_dist, hon_id):
             
             if gold_word_id in hon_id:
                 hon_gold_id = np.array(gold_labels)[i, j]
-                print ("honorific_gold_id", hon_gold_id)
+                print ("honorific_gold_id", hon_gold_id, i)
+                hon_sent_id = {f"Sentence{i}":hon_gold_id}
+                hon_id_list.append(hon_sent_id)
                 hon_scores.append(prob_dist[i, j, hon_gold_id])
             #print (j)
             #if gold_word_id <= len(gold_labels[i]):
@@ -224,23 +231,23 @@ def sent_scores(gold_labels, prob_dist, hon_id):
 
         all_hon_scores.append(hon_sent_scores)
         all_sent_scores.append(sent_scores)
-        
-    return all_sent_scores, num_sents, all_hon_scores # B x S
+        print (hon_id_list)
+    return all_sent_scores, num_sents, all_hon_scores, hon_id_list # B x S
 
 def cxmi():
     # base_prob_list : sent_size 
-    gold_labels, base_prob_dist, hon_id, output_dir = pred_prob_dist(model_type="base")
-    gpld_labels, context_prob_dist, hon_id, output_dir = pred_prob_dist(model_type="context")
+    gold_labels, base_prob_dist, hon_id, output_dir, tokenizer = pred_prob_dist(model_type="base")
+    gpld_labels, context_prob_dist, hon_id, output_dir, tokenizer = pred_prob_dist(model_type="context")
 
-    base_sent_scores, base_num_sents, base_hon_scores = sent_scores(gold_labels, base_prob_dist, hon_id)
-    context_sent_scores, context_num_sents, context_hon_scores = sent_scores(gold_labels, context_prob_dist, hon_id)
+    base_sent_scores, base_num_sents, base_hon_scores, hon_id_list = sent_scores(gold_labels, base_prob_dist, hon_id)
+    context_sent_scores, context_num_sents, context_hon_scores, hon_id_list = sent_scores(gold_labels, context_prob_dist, hon_id)
 
     
     cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
     hon_cxmi = - (np.mean(np.array(base_hon_scores) - np.array(context_hon_scores)))
     
     with open(output_dir+'/cxmi_score.txt','w', encoding='utf8') as wf:
-        wf.write(f"CXMI: {cxmi}\nHonorific CXMI: {hon_cxmi}") #ensure_ascii=False
+        wf.write(f"CXMI: {cxmi}\nHonorific CXMI: {hon_cxmi}\nUsed Honorifics: {tokenizer.decode([v for dict in hon_id_list for v in dict.values()])}\nHonorific ID: {hon_id_list}") #ensure_ascii=False
         #wf.write(f"Honorific CXMI: {hon_cxmi}")
 
     return cxmi, base_num_sents, context_num_sents, hon_cxmi
@@ -252,6 +259,7 @@ def main():
     print (f"CXMI: {cxmi_score}")
     print (f"number of context model sentences:  {context_num_sents}", f"number of base model sentences:  {base_num_sents}")
     print (f"Honorific CXMI: {hon_cxmi_score}")
+
 
 
 if __name__ == "__main__":
