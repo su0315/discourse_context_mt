@@ -2,29 +2,30 @@ generic:
   dataset: /home/sumire/discourse_context_mt/data/BSD-master/
   src_lang: en
   tgt_lang: ja
-  base_src_context: 0
-  context_src_context: 4
+  base_src_context: 2
+  context_src_context: 2
   base_tgt_context: 0
   context_tgt_context: 0
   base_dropout: 0.0
   context_dropout: 0.0
   base_tgt_sep: False
-  context_tgt_sep: False
+  context_tgt_sep: False ################3attention""#######################
   base_speaker: False
-  context_speaker: False
+  context_speaker: True
   random_context: False
   base_tag: False
-  context_tag: False
-  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-10000
+  context_tag: True
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/3-1_-t_random_sp_sc/checkpoint-10000
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/5-1-t_cxmi   # Modify here
+  output_dir: ./results/bsd_en-ja/cxmi_3-1_sp_sc   # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/5-1-t_cxmi               
+  logging_dir: ./logs/bsd_en-ja/cxmi_4-1_sp_sc
+               
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 1 #64 
+  per_device_eval_batch_size: 1  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3
@@ -48,7 +49,7 @@ training_args:
   save_steps: 5000
   eval_delay: 0.0
   include_inputs_for_metrics: True # for comet
-  eval_accumulation_steps: 10
+  eval_accumulation_steps: 20
 
 early_stopping:
   #class_path: transformers.EarlyStoppingCallback

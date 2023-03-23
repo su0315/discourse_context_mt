@@ -10,10 +10,12 @@ generic:
   context_dropout: 0.0
   base_tgt_sep: False
   context_tgt_sep: False
-  speaker: False
+  base_speaker: False
+  context_speaker: False
   random_context: False
-  tag: False
-  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-5000
+  base_tag: False
+  context_tag: False
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-10000
 
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
@@ -22,7 +24,7 @@ training_args:
   learning_rate: 2e-5
   logging_dir: ./logs/bsd_en-ja/4-1-t_cxmi               
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 4  #64 
+  per_device_eval_batch_size: 1  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3

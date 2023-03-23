@@ -9,8 +9,9 @@ generic:
   base_dropout: 0.0
   context_dropout: 0.0
   base_tgt_sep: False
-  context_tgt_sep: True
-  speaker: False
+  context_tgt_sep: False
+  base_speaker: False
+  context_speaker: False
   random_context: False
   base_tag: False
   context_tag: True
