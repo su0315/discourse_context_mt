@@ -197,7 +197,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
     # print(len(model_inputs['input_ids']))
     # print(len(model_inputs['attention_mask']))
     # print(len(new_src_contexts))
-    if src_context_size > 0 or random_context:
+    if src_context_size > 0 or random_context: # When random speaker and scene model, we do CoAtt model
         src_context_out = tokenizer(new_src_contexts, truncation=True,  max_length=max_length, padding = "max_length" )#Truncation=True
         src_context_ids = src_context_out['input_ids'] ### SU
         src_context_attn = src_context_out['attention_mask'] ### SU
@@ -224,7 +224,9 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         model_inputs['src_context_attention_mask']=new_src_attentions
     
     # Tokenize context indipendently
-    if tgt_context_size>0 or random_context: 
+
+    #if tgt_context_size>0 or random_context: 
+    if tgt_context_size > 0:
         #print ("new_tgt_contexts", new_tgt_contexts[:5])#SU
         
         context_out  = tokenizer(new_tgt_contexts,  truncation=True,  max_length=max_length, padding = "max_length" ) ### SU　"max_length", truncation_side="left", max_length=max_length,
