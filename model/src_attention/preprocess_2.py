@@ -38,17 +38,31 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         new_src_context = []
         for idx, ip in enumerate (doc_input):
         # Randomely decide True or False for CXMI random speaker model
-            if speaker and random_context:
+            if speaker and random_context and not tag:
                 spk = bool(random.getrandbits(1))
-                print ("random_speaker", idx, spk)
-            else: 
-                spk = speaker
-                
-            if tag and random_context:
-                tg = bool(random.getrandbits(1))
-                print ("random_scene_tag", idx, tg)
-            else:
                 tg = tag
+                print ("random_speaker", idx, spk)
+            else:
+                if speaker and not random_context: 
+                    spk = speaker
+                    tg = tag
+                if speaker and tag and random_context:
+                    spk_tg = bool(random.getrandbits(1))
+                    spk = spk_tg
+                    tg = spk_tg 
+                if not speaker and not tag:
+                    spk = speaker
+                    tg = tag
+
+            if tag and random_context and not speaker:
+                tg = bool(random.getrandbits(1))
+                spk = speaker
+                print ("random_scene_tag", idx, tg)
+            
+            else:
+                if tag and not random_context:
+                    tg = tag 
+                    spk = speaker
 
             if spk: 
                 #print ("idx", idx)
