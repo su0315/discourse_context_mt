@@ -170,12 +170,20 @@ def pred_prob_dist(model_type):
     
     prob_dist = preds[0] # The second element of the predictions are hidden states
 
-    print (type(prob_dist))
-    print ("prob_dist", prob_dist)
+    #print (type(prob_dist))
+    #print ("prob_dist", prob_dist)
 
-    print ("shape", prob_dist.shape)
+    #print ("shape", prob_dist.shape)
     # prob_dist : num_sent * seqlen * vocab 
-    return gold_labels, prob_dist, hon_id
+
+    # Take 
+    decoded_preds = tokenizer.batch_decode(np.argmax(prob_dist, axis=-1), skip_special_tokens=True)
+
+    with open(output_dir+'/translations.txt','w', encoding='utf8') as wf:
+         for translation in decoded_preds:
+            wf.write(translation.strip()+'\n') 
+
+    return gold_labels, prob_dist, hon_id, output_dir
 
 def sent_scores(gold_labels, prob_dist, hon_id): 
     # Skip token 1 ()
@@ -203,6 +211,7 @@ def sent_scores(gold_labels, prob_dist, hon_id):
             
             if gold_word_id in hon_id:
                 hon_gold_id = np.array(gold_labels)[i, j]
+                print ("honorific_gold_id", hon_gold_id)
                 hon_scores.append(prob_dist[i, j, hon_gold_id])
             #print (j)
             #if gold_word_id <= len(gold_labels[i]):
@@ -220,8 +229,8 @@ def sent_scores(gold_labels, prob_dist, hon_id):
 
 def cxmi():
     # base_prob_list : sent_size 
-    gold_labels, base_prob_dist, hon_id = pred_prob_dist(model_type="base")
-    gpld_labels, context_prob_dist, hon_id = pred_prob_dist(model_type="context")
+    gold_labels, base_prob_dist, hon_id, output_dir = pred_prob_dist(model_type="base")
+    gpld_labels, context_prob_dist, hon_id, output_dir = pred_prob_dist(model_type="context")
 
     base_sent_scores, base_num_sents, base_hon_scores = sent_scores(gold_labels, base_prob_dist, hon_id)
     context_sent_scores, context_num_sents, context_hon_scores = sent_scores(gold_labels, context_prob_dist, hon_id)
@@ -230,6 +239,10 @@ def cxmi():
     cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
     hon_cxmi = - (np.mean(np.array(base_hon_scores) - np.array(context_hon_scores)))
     
+    with open(output_dir+'/cxmi_score.txt','w', encoding='utf8') as wf:
+        wf.write(f"CXMI: {cxmi}\nHonorific CXMI: {hon_cxmi}") #ensure_ascii=False
+        #wf.write(f"Honorific CXMI: {hon_cxmi}")
+
     return cxmi, base_num_sents, context_num_sents, hon_cxmi
 
 def main():
@@ -239,5 +252,7 @@ def main():
     print (f"CXMI: {cxmi_score}")
     print (f"number of context model sentences:  {context_num_sents}", f"number of base model sentences:  {base_num_sents}")
     print (f"Honorific CXMI: {hon_cxmi_score}")
+
+
 if __name__ == "__main__":
     main()
