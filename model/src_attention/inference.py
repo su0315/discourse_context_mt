@@ -1,17 +1,17 @@
+# Not using Custom Trainer, but using original Trainer
 import argparse
 import preprocess_2, eval_bleu
 from transformers import Trainer, TrainingArguments, Seq2SeqTrainingArguments, Seq2SeqTrainer, EarlyStoppingCallback, MBart50Tokenizer, MBartConfig, MBartForConditionalGeneration, DataCollatorForSeq2Seq
 import evaluate
 import numpy as np
 import json
-from custom_model2 import MBartModelC, MBartForConditionalGenerationC
-from custom_trainer2 import Seq2SeqTrainerC
+#from custom_model2 import MBartModelC, MBartForConditionalGenerationC
+#from custom_trainer2 import Seq2SeqTrainerC
 #from logger import CustomLoggerCallback
 from transformers import integrations
 from datasets import load_dataset, concatenate_datasets 
 from functools import partial
-from jsonargparse import (ActionConfigFile, ArgumentParser, Namespace,
-                          namespace_to_dict)
+from jsonargparse import (ActionConfigFile, ArgumentParser, Namespace,namespace_to_dict)
 from datasets import disable_caching
 disable_caching()
 import torch
@@ -71,33 +71,35 @@ def main():
     #model_checkpoint = "/mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t/checkpoint-10000"
     configuration = MBartConfig()
     tokenizer = MBart50Tokenizer.from_pretrained(model_checkpoint, src_lang=f"{src_lang}_XX", tgt_lang=f"{tgt_lang}_XX")
-    model = MBartForConditionalGenerationC.from_pretrained(model_checkpoint)
+    model = MBartForConditionalGeneration.from_pretrained(model_checkpoint)
     
-    # Add special token to separate context and current sentence
-    tokenizer.add_special_tokens({"sep_token":"</t>"})
-    #tokenizer.add_special_tokens({"sep1_token":"</t1>"})
+    if model_checkpoint != "facebook/mbart-large-50-many-to-many-mmt":
+        print ("Don't add special additional tokens")
+        # Add special token to separate context and current sentence
+        tokenizer.add_special_tokens({"sep_token":"</t>"})
+        #tokenizer.add_special_tokens({"sep1_token":"</t1>"})
 
-    # Add contextual special tokens
-    special_tokens = []
+        # Add contextual special tokens
+        special_tokens = []
 
-    # Add Speaker Tags
-    speaker_tags = ['<CurrSpeak>','<DiffSpeak>']
-    for i in speaker_tags:
-        special_tokens.append(i)
-    #special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
-    #tokenizer.add_special_tokens(special_tokens_dict)
+        # Add Speaker Tags
+        speaker_tags = ['<CurrSpeak>','<DiffSpeak>']
+        for i in speaker_tags:
+            special_tokens.append(i)
+        #special_tokens_dict = {'additional_special_tokens': ['<CurrSpeak>','<DiffSpeak>']}
+        #tokenizer.add_special_tokens(special_tokens_dict)
 
-    # Add Scene Tags
-    scene_tags = ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']
-    for i in scene_tags:
-        special_tokens.append(i)
-    #special_tokens_dict = {'additional_special_tokens': ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']}
-    #tokenizer.add_special_tokens(special_tokens_dict)
-    special_tokens_dict = {'additional_special_tokens': special_tokens}
-    tokenizer.add_special_tokens(special_tokens_dict)
+        # Add Scene Tags
+        scene_tags = ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']
+        for i in scene_tags:
+            special_tokens.append(i)
+        #special_tokens_dict = {'additional_special_tokens': ['<face-to-face conversation>','<phone call>', '<general chatting>', '<meeting>', '<training>', '<presentation>']}
+        #tokenizer.add_special_tokens(special_tokens_dict)
+        special_tokens_dict = {'additional_special_tokens': special_tokens}
+        tokenizer.add_special_tokens(special_tokens_dict)
 
-    #print ("speacial_tokens_dict", special_tokens_dict)
-    model.resize_token_embeddings(len(tokenizer))
+        #print ("speacial_tokens_dict", special_tokens_dict)
+        model.resize_token_embeddings(len(tokenizer))
     
 
     # Load the dataset for training
@@ -113,20 +115,12 @@ def main():
     remove_columns=dataset["test"].column_names, # train
     )
     
-    if cw_dropout_rate > 0:
-        tokenized_datasets['train'] = dataset['train'].map(
-        partial(preprocess_2.preprocess_function, src_lang, tgt_lang, tag, speaker, src_context_size, tgt_context_size, random_context, cw_dropout_rate, tgt_sep, tokenizer),
-        batched=True,
-        remove_columns=dataset["train"].column_names, # train
-        )
-    #print(tokenized_datasets.keys())
-
     # Create a batch using DataCollator and pad dinamically
     data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="pt") 
     
     training_args, callbacks = initialize_trainer(cfg)
 
-    trainer = Seq2SeqTrainerC(
+    trainer = Seq2SeqTrainer(
         model=model,                         
         args=training_args,                              
         data_collator=data_collator,
@@ -137,9 +131,8 @@ def main():
 
         )
     
-    #trainer.train()
-    #trainer.evaluate()
-    model.eval()
+
+    #model.eval()
     preds, label_ids, metrics = trainer.predict(tokenized_datasets["test"])
     print ("predict")
     print ("preds:", preds)
