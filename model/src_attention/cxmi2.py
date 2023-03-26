@@ -206,7 +206,7 @@ def sent_scores(gold_labels, prob_dist, hon_id):
     hon_id_list = []
     for i in range(num_sents):
         scores = [] # S
-        hon_scores = []
+        #hon_scores = []
         print ("num_sents", i)
         seq_len = prob_dist.shape[1]
         #print ("seq_len", seq_len)
@@ -216,22 +216,23 @@ def sent_scores(gold_labels, prob_dist, hon_id):
             
             if gold_word_id in hon_id:
                 hon_gold_id = np.array(gold_labels)[i, j]
-                print ("honorific_gold_id", hon_gold_id, i)
-                hon_sent_id = {f"Sentence{i}":hon_gold_id}
-                hon_id_list.append(hon_sent_id)
-                hon_scores.append(prob_dist[i, j, hon_gold_id])
+                print ("honorific_gold_id", hon_gold_id)
+                hon_loc_id = {f"Sentence{i} Word{j}":hon_gold_id}
+                hon_id_list.append(hon_loc_id)
+                all_hon_scores.append(prob_dist[i, j, hon_gold_id])
             #print (j)
             #if gold_word_id <= len(gold_labels[i]):
                 #print (len(gold_labels[i]))
             if gold_word_id != 1: # pad token 
             #scores.append(argmax(all_prob_dist[i, j, :]))
                 scores.append(prob_dist[i, j, gold_word_id])
-        hon_sent_scores = sum(hon_scores)
+        #hon_sent_scores = sum(hon_scores)
         sent_scores = sum(scores)
 
-        all_hon_scores.append(hon_sent_scores)
+        #all_hon_scores.append(hon_sent_scores)
         all_sent_scores.append(sent_scores)
-        print (hon_id_list)
+        
+    print ("all_hon_scores", all_hon_scores)
     return all_sent_scores, num_sents, all_hon_scores, hon_id_list # B x S
 
 def cxmi():
@@ -242,14 +243,22 @@ def cxmi():
     base_sent_scores, base_num_sents, base_hon_scores, hon_id_list = sent_scores(gold_labels, base_prob_dist, hon_id)
     context_sent_scores, context_num_sents, context_hon_scores, hon_id_list = sent_scores(gold_labels, context_prob_dist, hon_id)
 
-    
-    cxmi = - (np.mean(np.array(base_sent_scores) - np.array(context_sent_scores)))
-    hon_cxmi = - (np.mean(np.array(base_hon_scores) - np.array(context_hon_scores)))
+    cxmi_per_sent = np.array(base_sent_scores) - np.array(context_sent_scores)
+    max_cxmi_sent_id = np.argmax(-cxmi_per_sent)
+    max_cxmi_score = -cxmi_per_sent[max_cxmi_sent_id]
+    cxmi = - (np.mean(cxmi_per_sent))
+    hon_scores_per_hon_word = np.array(base_hon_scores) - np.array(context_hon_scores)
+    print ("hon_scores", hon_scores_per_hon_word)
+    argmax_hon_cxmi = np.argmax(-(hon_scores_per_hon_word))
+    max_hon_cxmi = -hon_scores_per_hon_word[argmax_hon_cxmi]
+    hon_cxmi = - (np.mean (hon_scores_per_hon_word))
+    #hon_cxmi = - (np.mean(np.array(base_hon_scores) - np.array(context_hon_scores)))
     
     with open(output_dir+'/cxmi_score.txt','w', encoding='utf8') as wf:
-        wf.write(f"CXMI: {cxmi}\nHonorific CXMI: {hon_cxmi}\nUsed Honorifics: {tokenizer.decode([v for dict in hon_id_list for v in dict.values()])}\nHonorific ID: {hon_id_list}") #ensure_ascii=False
+        wf.write(f"CXMI: {cxmi}\nMax CXMI Sentence: Sent{max_cxmi_sent_id}: {max_cxmi_score}\nHonorific CXMI: {hon_cxmi}\n({len(hon_id_list)})Used Honorifics: {tokenizer.decode([v for dict in hon_id_list for v in dict.values()])}\nHonorific ID: {hon_id_list}\nMax Hon CXMI: The {argmax_hon_cxmi}rd used Honorific ({tokenizer.decode((hon_id_list[argmax_hon_cxmi]).values())}) / {max_hon_cxmi}\n All Honorific CXMI: {hon_scores_per_hon_word}") #ensure_ascii=False
         #wf.write(f"Honorific CXMI: {hon_cxmi}")
 
+    print (f"number of honorific words:  {len(hon_id_list)}")
     return cxmi, base_num_sents, context_num_sents, hon_cxmi
 
 def main():
