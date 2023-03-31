@@ -1,15 +1,31 @@
-# discourse_context_mt
+# Context-aware Neural Machine Translation for English-Japanese Business Scene Dialogues
 
-This project is still ongoing.
+This Repository contains the implementation of the training and evaluation of Context-aware Neural Machine Translation for English-Japanese Business Scene Dialogues.
 
+Further information is here: 
 
-To run the model with English-Japanese, BSD dataset, source-context size 1 and target-context size 1 (2-2 model),
-
-run the script below in the discourse_context_mt directory.
+The environment can be created by the yaml file.
 ```
-python main.py  --cfg /path/to/config_2-2.yaml
+conda env create -f environment.yml
+conda activate mt2022_server
 ```
 
+In the config folder, the configuration files of all types of context-aware models that you can run with the command below.  
 
-The result will be updated
-[here](https://docs.google.com/spreadsheets/d/1yiK7cjZ-hxiPAKQZLFRc4C4P0cG5YvMZy8xyK5YzEwQ/edit?usp=sharing)
+To train and evaluate the model, run
+```
+python main.py  --cfg MODEL_CONFIG_FILE
+```
+For example,
+to train and evaluate context-agnostic model (1-1 model), run
+```
+python main.py  --cfg /path/to/config_1-1.yaml
+```
+to train and evaluate source side context model (e.g. 5-1 model), run
+```
+python main.py  --cfg /path/to/config_5-1.yaml
+```
+to compute CXMI and Honorifics CXMI score (e.g. between 5-1 model and 1-1 model), run
+```
+python cxmi.py  --cfg /path/to/cxmi_5-1.yaml
+```
