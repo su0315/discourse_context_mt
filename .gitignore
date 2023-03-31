@@ -132,3 +132,8 @@ dmypy.json
 logs/
 results/
 no_update_tgt_context/
+tgt_sep/
+previous_models/
+
+# Files to be ignored
+huggingface_mbart.ipynb

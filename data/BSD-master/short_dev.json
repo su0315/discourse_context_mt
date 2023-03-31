@@ -1,0 +1,366 @@
+[{
+    "id": "190315_E001_17",
+    "tag": "training",
+    "title": "Training: How to do research",
+    "original_language": "en",
+    "conversation": [
+        {
+            "no": 1,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "I will be teaching you how to conduct research today.",
+            "ja_sentence": "今日は調査の進め方についてトレーニングします。"
+        },
+        {
+            "no": 2,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "Like just searching online?",
+            "ja_sentence": "オンライン調査みたいなものですか？"
+        },
+        {
+            "no": 3,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Yes and no.",
+            "ja_sentence": "それも含みます。"
+        },
+        {
+            "no": 4,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "First of all we need to make sure the sources are legitimate.",
+            "ja_sentence": "まず、出所が正規のところであるかどうか確認しないといけません。"
+        },
+        {
+            "no": 5,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "So no blogs or editorial?",
+            "ja_sentence": "ブログとかコラムなどはだめということですか？"
+        },
+        {
+            "no": 6,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Exactly.",
+            "ja_sentence": "そのとおり。"
+        },
+        {
+            "no": 7,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "The first place I would look at is government websites.",
+            "ja_sentence": "最初に見るところは政府のホームページです。"
+        },
+        {
+            "no": 8,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "They typically have accurate data that is trustworthy.",
+            "ja_sentence": "政府の数字は、一般的に正確で信用性が高いものです。"
+        },
+        {
+            "no": 9,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "What other websites would be good?",
+            "ja_sentence": "他に良いサイトは？"
+        },
+        {
+            "no": 10,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "You can also check out major institutions like banks, accounting companies, and market research companies.",
+            "ja_sentence": "大手の銀行、会計事務所、市場調査会社などの企業データも活用できます。"
+        },
+        {
+            "no": 11,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "Why those?",
+            "ja_sentence": "どうしてですか？"
+        },
+        {
+            "no": 12,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "They are well known and typically publishes good market reports.",
+            "ja_sentence": "こうした企業は有名で、たいてい質の良い市況報告を発行しています。"
+        },
+        {
+            "no": 13,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "But some market reports aren't free.",
+            "ja_sentence": "でも、市況報告は無料でないこともあります。"
+        },
+        {
+            "no": 14,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "So stick to the ones that are free.",
+            "ja_sentence": "なので、無料データで探します。"
+        },
+        {
+            "no": 15,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "What if it seems the report is useful?",
+            "ja_sentence": "でも、もし、有料データで良さそうなのがあったら？"
+        },
+        {
+            "no": 16,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "You can consult with me then.",
+            "ja_sentence": "私に相談してください。"
+        },
+        {
+            "no": 17,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "But a lot of the research you will be doing is preliminary research.",
+            "ja_sentence": "でも、君がやるのはほとんど予備調査だよ。"
+        },
+        {
+            "no": 18,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "So it won't be presented to upper management.",
+            "ja_sentence": "経営陣に見せるような調査ではありません。"
+        },
+        {
+            "no": 19,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "I see.",
+            "ja_sentence": "わかりました。"
+        },
+        {
+            "no": 20,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "Would there be cases when we would purchase market reports?",
+            "ja_sentence": "市況報告書を購入するようなケースはあるのですか？"
+        },
+        {
+            "no": 21,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "We will need them when we conduct detailed feasibility studies.",
+            "ja_sentence": "詳しい実現可能性調査をするようなときには購入が必要になります。"
+        },
+        {
+            "no": 22,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "These will be presented to the upper management so we need to show that the information is validated by professional third-party companies.",
+            "ja_sentence": "そういう調査は上層部へ報告されるので、専門の第３者企業に認証された情報でなければなりません。"
+        },
+        {
+            "no": 23,
+            "en_speaker": "Mr. Sam Lee",
+            "ja_speaker": "サム リーさん",
+            "en_sentence": "Got it.",
+            "ja_sentence": "わかりました。"
+        }
+    ]
+},
+{
+    "id": "190315_E003_01",
+    "tag": "meeting",
+    "title": "Meeting: reviewing a proposal",
+    "original_language": "en",
+    "conversation": [
+        {
+            "no": 1,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Hi Ben, it's nice to see you again.",
+            "ja_sentence": "ベンさん、こんにちは、またお会いできて嬉しいです。"
+        },
+        {
+            "no": 2,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Nice to see you as well.",
+            "ja_sentence": "こちらこそお会いできて嬉しいです。"
+        },
+        {
+            "no": 3,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Business has been good?",
+            "ja_sentence": "ビジネスの方はいかがですか。"
+        },
+        {
+            "no": 4,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "It's been a bit slow with the holiday season but that's normal.",
+            "ja_sentence": "休暇のシーズンでちょっと活気がないですが、それが普通です。"
+        },
+        {
+            "no": 5,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Again thank you for coming in today.",
+            "ja_sentence": "今日はお越しいただいてありがとうございます。"
+        },
+        {
+            "no": 6,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "I wanted to discuss the proposal you sent me last week.",
+            "ja_sentence": "先週送って頂いた提案についてお話したかったんです。"
+        },
+        {
+            "no": 7,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Yes, the one regarding the market research.",
+            "ja_sentence": "はい、マーケットリサーチに関する件ですね。"
+        },
+        {
+            "no": 8,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "I reviewed the contents internally and felt that it wasn't quite something we were looking for.",
+            "ja_sentence": "社内で内容を検討したのですが、ちょっと我々が求めていたものとは違っていた感じがあります。"
+        },
+        {
+            "no": 9,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Can you be a bit more specific?",
+            "ja_sentence": "もう少し具体的にお話して頂けますか。"
+        },
+        {
+            "no": 10,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "We were hoping that the research will cover more topics in depths.",
+            "ja_sentence": "リサーチがもっと多くのトピックを掘り下げるのを期待していました。"
+        },
+        {
+            "no": 11,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "But it basically covers information we already know.",
+            "ja_sentence": "しかしおおむねすでに私たちが知っている情報をカバーしていました。"
+        },
+        {
+            "no": 12,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Were you expecting more field work like interviewing companies?",
+            "ja_sentence": "会社への聞き取り調査など、もっと実地調査を期待されていましたか？"
+        },
+        {
+            "no": 13,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "That's correct.",
+            "ja_sentence": "はい、そうです。"
+        },
+        {
+            "no": 14,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "If that's the case, the cost structure for our service would be different.",
+            "ja_sentence": "その場合、私共のサービスの料金体制が変わってきます。"
+        },
+        {
+            "no": 15,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "So it won't be a flat price?",
+            "ja_sentence": "それでは一律料金ではなくなるということですか？"
+        },
+        {
+            "no": 16,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "It will be a combination.",
+            "ja_sentence": "組み合わせになりますね。"
+        },
+        {
+            "no": 17,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "So there will be the base price plus a monthly retainer fee for the duration of the field work.",
+            "ja_sentence": "ですから基本料金の上に、実地調査を行う期間中に月々の依頼料がかかります。"
+        },
+        {
+            "no": 18,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Also, travel expense and a daily meal allowance would have to be covered as well.",
+            "ja_sentence": "また、旅費と毎日の食費もかかります。"
+        },
+        {
+            "no": 19,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "I see.",
+            "ja_sentence": "そうですか。"
+        },
+        {
+            "no": 20,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "How about you give me another proposal with that cost structure so I can discuss it with my boss.",
+            "ja_sentence": "上司と話し合うので、その料金体制で別の提案を出して頂けますか？"
+        },
+        {
+            "no": 21,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Yeah I can whip that up quickly.",
+            "ja_sentence": "はい、すぐにご用意できます。"
+        },
+        {
+            "no": 22,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "I think I can get you a revised proposal by the end of the week.",
+            "ja_sentence": "週末までに改訂した提案をお渡しします。"
+        },
+        {
+            "no": 23,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "That would be great.",
+            "ja_sentence": "大変ありがたいです。"
+        },
+        {
+            "no": 24,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Please send it to us as soon as you can.",
+            "ja_sentence": "できるだけ早く送ってください。"
+        },
+        {
+            "no": 25,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Will do.",
+            "ja_sentence": "そうします。"
+        },
+        {
+            "no": 26,
+            "en_speaker": "Mr. Ben Sherman",
+            "ja_speaker": "ベン シャーマンさん",
+            "en_sentence": "Well, thank you for coming today.",
+            "ja_sentence": "では、今日はお越しいただきありがとうございました。"
+        },
+        {
+            "no": 27,
+            "en_speaker": "Mr. Ken James",
+            "ja_speaker": "ケン ジェームスさん",
+            "en_sentence": "Thank you for the opportunity.",
+            "ja_sentence": "機会を頂き、ありがとうございます。"
+        }
+    ]
+}]
