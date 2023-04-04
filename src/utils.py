@@ -1,3 +1,6 @@
+# The code below is modified version of Huggingface Transformer Generation utils.py, to specifically adapt to context-aware mt model. 
+# The original Huggingface file should be replaced by this code below in the right file location, to run context-aware mt model.
+
 # coding=utf-8
 # Copyright 2020 The Google AI Language Team Authors, Facebook AI Research authors and The HuggingFace Inc. team.
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
