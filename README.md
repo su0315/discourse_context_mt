@@ -7,7 +7,7 @@ Further information is here:
 The environment can be created by the yaml file.
 ```
 conda env create -f environment.yml
-conda activate mt2022_server
+conda activate context_aware_mt
 ```
 
 In the config folder, the configuration files of all types of context-aware models that you can run with the command below.  
