@@ -134,7 +134,8 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
                     new_doc_input.append(sent)
                     new_src_contexts.append('</t>')
                 else:
-                    concat_contexts = "</t>".join(context_list)
+                    concat_contexts = "</t>".join(context_list) # SU: To delete the </t> between contexts
+                    
                     sent = ip
                     if spk or tg:
                         if not tg:
@@ -156,15 +157,15 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
         #print ("randoms:", randoms)   
         new_inputs.append(new_doc_input)
         
-        # Target side
+       # Target side
         new_doc_target = []
         # Separate context and current sentences per doc
-        new_doc_context =[] 
+        new_doc_context = [] 
 
         for idx, tgt in enumerate (doc_target):
             target_context_size = tgt_context_size
 
-            if tgt_context_size>0 and random_context:
+            if random_context:
                 target_context_size = random.randint(0, tgt_context_size)
                 
             if target_context_size == 0:
@@ -215,13 +216,33 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
             new_inputs, text_target=new_targets, truncation=True,  max_length=max_length, padding = "max_length" ) # "max_length", truncation_side="left" #max_length=max_length,
     """
     # Old Setting Without Max length 
-    # model_inputs = tokenizer(p
+    # model_inputs = tokenizer(
             new_inputs, text_target=new_targets, truncation=False, padding = True )
     """
-    # print(len(model_inputs['labels']))
-    # print(len(model_inputs['input_ids']))
-    # print(len(model_inputs['attention_mask']))
-    # print(len(new_src_contexts))
+    # Tokenize context indipendently
+    if tgt_context_size>0 or random_context: 
+        #print ("new_tgt_contexts", new_tgt_contexts[:5])#SU
+        tokenizer.src_lang = f"{tgt_lang}_XX"
+        context_out  = tokenizer(new_tgt_contexts,  truncation=True,  max_length=max_length, padding = "max_length" ) ### SU　"max_length", truncation_side="left", max_length=max_length,
+        tokenizer.src_lang = f"{src_lang}_XX"
+        """
+        # Old Setting Without Max length 
+        # context_out  = tokenizer(new_tgt_contexts,  truncation=False, padding = True)
+        """
+        context_ids = context_out['input_ids'] ### SU
+        context_attn = context_out['attention_mask'] ### SU
+        
+        # Add tokenized context information on model_inputs
+        model_inputs['tgt_context_ids']=context_ids
+        #print ("model_inputs['context_ids']", model_inputs['context_ids'][10:20])
+        model_inputs['context_attention_mask']=context_attn
+        print ("len(context_ids)", len(model_inputs["tgt_context_ids"]))
+        #print ("model_inputs['context_attention_mask']", model_inputs['context_attention_mask'][:5])
+        #print ("model_inputs['input_ids']", model_inputs["input_ids"][:5])
+
+        #print ("\nDecoded tokenized context_ids: ", tokenizer.batch_decode(model_inputs["context_ids"][0:10], skip_special_tokens=True))
+        #print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
+    
     
     if src_context_size > 0 or tag or speaker: # When random speaker and scene model, we do CoAtt model
         src_context_out = tokenizer(new_src_contexts, truncation=True,  max_length=max_length, padding = "max_length" )#Truncation=True
@@ -252,33 +273,7 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
     # Tokenize context indipendently
 
     #if tgt_context_size>0 or random_context: 
-    if tgt_context_size > 0 :
-        #print ("new_tgt_contexts", new_tgt_contexts[:5])#SU
-        
-        tokenizer.src_lang = f"{tgt_lang}_XX"
-        context_out  = tokenizer(new_tgt_contexts,  truncation=True,  max_length=max_length, padding = "max_length")
-        tokenizer.src_lang = f"{src_lang}_XX"
-        tgt_context_ids = context_out['input_ids'] ### SU
-        tgt_context_attn = context_out['attention_mask'] ### SU
-        
-        # Add tokenized context information on model_inputs
-        model_inputs['tgt_context_ids']=tgt_context_ids
-        model_inputs['tgt_context_attention_mask']=tgt_context_attn
-        #print ("\nDecoded tokenized tgt_context_ids: ", tokenizer.batch_decode(model_inputs["tgt_context_ids"][0:10], skip_special_tokens=False))
-        #print ("\nDecoded tokenized context_atten: ", tokenizer.batch_decode(model_inputs['context_attention_mask'][0:10],skip_special_tokens=False))
-        
-        """
-        ############NEW concat between current and context ###SU #########################
-        
-        #new_target_ids = []
-        #for c,i in zip(tgt_context_ids,model_inputs['labels']):
-            # print(c,'context')
-            # print(i,'inputs')
-            #c.extend(i)
-            #new_target_ids.append(c)
-        #model_inputs['labels']=new_target_ids
-        #print(tokenizer.batch_decode(model_inputs['labels'][:30], skip_special_tokens=False),'model_inputs2')
-        """
+    #if tgt_context_size > 0 :
     
     if cw_dropout_rate>0:
         for i,inst in enumerate(model_inputs['input_ids']):
@@ -295,9 +290,10 @@ def preprocess_function(src_lang, tgt_lang, tag, speaker, src_context_size, tgt_
 
     print ("\nDecoded tokinized input-ids: ", tokenizer.batch_decode(model_inputs['input_ids'][:5], skip_special_tokens=False))
     print ("\nDecoded tokinized labels: ", tokenizer.batch_decode(model_inputs['labels'][0:5], skip_special_tokens=False))
-    # print(len(model_inputs['labels']))
-    # print(len(model_inputs['input_ids']))
-    # print(len(model_inputs['attention_mask']))
+    print("len(laels)", len(model_inputs['labels']))
+    print("len(input_ids)", len(model_inputs['input_ids']))
+    print("len(att)", len(model_inputs['attention_mask']))
+    
     return model_inputs
 
 
