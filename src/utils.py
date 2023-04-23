@@ -1,3 +1,6 @@
+# The code below is modified version of Huggingface Transformer Generation utils.py, to specifically adapt to context-aware mt model. 
+# The original Huggingface file should be replaced by this code below in the right file location, to run context-aware mt model.
+
 # coding=utf-8
 # Copyright 2020 The Google AI Language Team Authors, Facebook AI Research authors and The HuggingFace Inc. team.
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
@@ -1344,7 +1347,7 @@ class GenerationMixin:
                 inputs_tensor, model_kwargs, model_input_name
             )
 
-        # 4. Prepare `input_ids` which will be used for auto-regressive generation
+        # 4. Prepare `d` which will be used for auto-regressive generation
         if self.config.is_encoder_decoder:
             input_ids = self._prepare_decoder_input_ids_for_generation(
                 batch_size,

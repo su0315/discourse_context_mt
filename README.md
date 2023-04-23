@@ -2,12 +2,12 @@
 
 This Repository contains the implementation of the training and evaluation of Context-aware Neural Machine Translation for English-Japanese Business Scene Dialogues.
 
-Further information is here: 
+Further information can be found in ``IM_report_honda.pdf``.
 
 The environment can be created by the yaml file.
 ```
 conda env create -f environment.yml
-conda activate mt2022_server
+conda activate context_aware_mt
 ```
 
 In the config folder, the configuration files of all types of context-aware models that you can run with the command below.  
