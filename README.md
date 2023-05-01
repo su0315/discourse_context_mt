@@ -14,6 +14,7 @@ In the config folder, the configuration files of all types of context-aware mode
 
 To train and evaluate the model, run
 ```
+cd src
 python main.py  --cfg MODEL_CONFIG_FILE
 ```
 For example,
