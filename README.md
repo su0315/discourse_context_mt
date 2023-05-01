@@ -12,6 +12,10 @@ conda activate context_aware_mt
 
 In the config folder, the configuration files of all types of context-aware models that you can run with the command below.  
 
+First, move to src directory
+```
+cd src
+```
 To train and evaluate the model, run
 ```
 cd src
