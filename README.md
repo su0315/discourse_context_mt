@@ -18,7 +18,6 @@ cd src
 ```
 To train and evaluate the model, run
 ```
-cd src
 python main.py  --cfg MODEL_CONFIG_FILE
 ```
 For example,
