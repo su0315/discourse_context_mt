@@ -2,23 +2,29 @@ generic:
   dataset: /home/sumire/discourse_context_mt/data/AMI-Meeting-Parallel-Corpus-master/
   src_lang: en
   tgt_lang: ja
-  src_context: 1
-  tgt_context: 0
-  dropout: 0.0
-  tgt_sep: False
-  speaker: False
+  base_src_context: 0
+  context_src_context: 3
+  base_tgt_context: 0
+  context_tgt_context: 0
+  base_dropout: 0.0
+  context_dropout: 0.0
+  base_tgt_sep: False
+  context_tgt_sep: False
+  base_speaker: False
+  context_speaker: False
   random_context: False
-  tag: False
+  base_tag: False
+  context_speaker: False
+  checkpoint: /mnt/data-poseidon/sumire/ami_en-ja/AMI_random_5-1-t/checkpoint-20000
   
-
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/ami_en-ja/src_attention/AMI_2-1-t # Modify here
+  output_dir: ./results/ami_en-ja/src_attention/4-1-t_cxmi_1  # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/ami_en-ja/src_attention/AMI_2-1-t                   
+  logging_dir: ./logs/ami_en-ja/src_attention/4-1-t_cxmi_1
   per_device_train_batch_size: 4 #16  
-  per_device_eval_batch_size: 4  #64 
+  per_device_eval_batch_size: 1  #64 
   warmup_steps: 500                
   weight_decay: 0.01
   save_total_limit: 3
@@ -31,7 +37,7 @@ training_args:
   load_best_model_at_end: True
   num_train_epochs: 5
   greater_is_better: True
-  predict_with_generate: True
+  predict_with_generate: False
   do_train: True
   logging_strategy: steps
   save_strategy: steps

@@ -112,7 +112,7 @@ def pred_prob_dist(model_type):
 
     # Load the test dataset for CXMI
     file_path = file_path
-    data_files = {"test": f"{file_path}test_cxmi1.json"}
+    data_files = {"test": f"{file_path}test.json"}
     dataset = load_dataset("json", data_files=data_files)
 
     # Apply the preprocess function for the entire dataset 
