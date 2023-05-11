@@ -33,15 +33,16 @@ to compute CXMI and Honorifics CXMI score (e.g. between 5-1 model and 1-1 model)
 ```
 python cxmi.py  --cfg /path/to/cxmi_5-1.yaml
 ```
-Hyperparameters used for the experiment is below.
-In this experiment, truncation is not set so that the model does not cut the current sentence when the context size becomes larger. 
+Hyperparameters used for the experiment is below. Optimizer is default to adam. 
 All of the parameters and a more detailed setup are in configuration files. 
 | Parameter  | Value |
 | ------------- | ------------- |
 |Max Input Size for Padding | 128 | 
+|Truncation | True |
 |Batch Size | 4 |
 |Learning Rate | 2e-5 |
 |Warmup Steps | 500 |
 |Weight Decay | 0.01 |
 |Train Epochs | 5 (10 for CXMI random models) |
 |Early Stopping Patience | 3 (5 for CXMI random models) |
+
