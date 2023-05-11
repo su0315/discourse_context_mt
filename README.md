@@ -45,6 +45,6 @@ All of the parameters and a more detailed setup are in configuration files.
 |Weight Decay | 0.01 |
 |Train Epochs | 5 (10 for CXMI random models) |
 |Early Stopping Patience | 3 (5 for CXMI random models) |
-|Metric_for_best_model|comet|
+|Metric for bestmodel | comet|
 
 
