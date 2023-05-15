@@ -15,14 +15,14 @@ generic:
   random_context: False
   base_tag: False
   context_tag: False
-  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-10000
-
+  #checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-10000
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/src_attention/5-1-t_random/checkpoint-10000
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
-  output_dir: ./results/bsd_en-ja/5-1-t_cxmi_1   # Modify here
+  output_dir: ./results/bsd_en-ja/5-1-t_cxmi_1_no_att   # Modify here
   evaluation_strategy: steps
   learning_rate: 2e-5
-  logging_dir: ./logs/bsd_en-ja/5-1-t_cxmi_1            
+  logging_dir: ./logs/bsd_en-ja/5-1-t_cxmi_1_no_att            
   per_device_train_batch_size: 4 #16  
   per_device_eval_batch_size: 1 #64 
   warmup_steps: 500                

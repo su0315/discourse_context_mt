@@ -16,7 +16,7 @@ generic:
   base_tag: False
   context_speaker: False
   #checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-5000
-  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/newest_truncate_padding_mex_length/src_attention/5-1-t_random/checkpoint-10000
+  checkpoint: /mnt/data-poseidon/sumire/bsd_en-ja/src_attention/5-1-t_random/checkpoint-10000
   
 training_args:
   #class_path: transformers.Seq2SeqTrainingArguments
