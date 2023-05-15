@@ -2,7 +2,7 @@
 
 This Repository contains the implementation of the training and evaluation of Context-aware Neural Machine Translation for English-Japanese Business Scene Dialogues.
 
-Further information can be found in ``IM_report_honda.pdf``.
+
 
 The environment can be created by the yaml file.
 ```
@@ -12,6 +12,10 @@ conda activate context_aware_mt
 
 In the config folder, the configuration files of all types of context-aware models that you can run with the command below.  
 
+First, move to src directory
+```
+cd src
+```
 To train and evaluate the model, run
 ```
 python main.py  --cfg MODEL_CONFIG_FILE
@@ -29,15 +33,18 @@ to compute CXMI and Honorifics CXMI score (e.g. between 5-1 model and 1-1 model)
 ```
 python cxmi.py  --cfg /path/to/cxmi_5-1.yaml
 ```
-Hyperparameters used for the experiment is below.
-In this experiment, truncation is not set so that the model does not cut the current sentence when the context size becomes larger. 
+Hyperparameters used for the experiment is below. Optimizer is default to adam. 
 All of the parameters and a more detailed setup are in configuration files. 
 | Parameter  | Value |
 | ------------- | ------------- |
 |Max Input Size for Padding | 128 | 
+|Truncation | True |
 |Batch Size | 4 |
 |Learning Rate | 2e-5 |
 |Warmup Steps | 500 |
 |Weight Decay | 0.01 |
 |Train Epochs | 5 (10 for CXMI random models) |
 |Early Stopping Patience | 3 (5 for CXMI random models) |
+|Metric for bestmodel | comet|
+
+
