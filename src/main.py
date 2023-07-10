@@ -63,8 +63,6 @@ def main():
     output_dir = cfg.training_args.output_dir
     tag = cfg.generic.tag
     
-
-   
     # Tokenize using "facebook/mbart-large-50-many-to-many-mmt"
     model_checkpoint = "facebook/mbart-large-50-many-to-many-mmt"
     configuration = MBartConfig()
@@ -90,7 +88,6 @@ def main():
     tokenizer.add_special_tokens(special_tokens_dict)
     model.resize_token_embeddings(len(tokenizer))
     
-
     # Load the dataset for training
     file_path = file_path
     data_files = {"train": f"{file_path}train.json", "validation": f"{file_path}dev.json", "test": f"{file_path}test.json"}

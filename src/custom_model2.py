@@ -486,7 +486,7 @@ class MBartForConditionalGenerationC(MBartForConditionalGeneration):
             #print(self.config.vocab_size)
             print ("tgt_context_id is not None")
         
-        #print(lm_logits.shape)
+        #q(lm_logits.shape)
         #calculate loss only for the original target
         masked_lm_loss = None
         if labels is not None:
@@ -894,11 +894,12 @@ class MBartDecoderC(MBartDecoder):
         if inputs_embeds is None:
             inputs_embeds = self.embed_tokens(input_ids) * self.embed_scale
         #CZ
-        #print(tgt_context_ids.shape)
+        #print("tgt_context_ids.shape", tgt_context_ids.shape)
         if tgt_context_ids is not None:
             context_embeds = self.embed_tokens(tgt_context_ids) * self.embed_scale
-            #print(context_embeds.shape, tgt_context_ids)
-            #print(inputs_embeds.shape, input_ids)
+            print("tgt_context_ids.shape", tgt_context_ids.shape)
+            print("context_embeds_shape", context_embeds.shape, "contextids", tgt_context_ids)
+            print("inputs_embeds", inputs_embeds.shape, input_ids)
             inputs_embeds = torch.cat((context_embeds,inputs_embeds),dim=1)
             
         input_shape = inputs_embeds.size()[:-1]
